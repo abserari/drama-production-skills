@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Optional
 
 COMFY_HOST = "127.0.0.1:8188"
-COMFYUI_OUTPUT_ROOT = Path(r"C:\AI\ComfyUI\output")
+COMFYUI_OUTPUT_ROOT = Path(os.environ.get("COMFYUI_PATH", r"C:\AI\ComfyUI")) / "output"
 
 
 def build_h3_prompt_graph(

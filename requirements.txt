@@ -1,0 +1,24 @@
+# 短剧工业化 AI 管线核心 Python 依赖
+# Core Python Dependencies for Drama Production Pipeline
+
+# 基础数值计算与张量运算
+numpy>=1.24.0
+scipy>=1.10.0
+
+# 计算机视觉与视频/图像处理
+opencv-python>=4.8.0
+Pillow>=10.0.0
+
+# 神经网络与深度学习推理 (用于 1080p 超分辨率 RealESRGAN)
+# 推荐安装与本地 CUDA 版本匹配的 PyTorch:
+# pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
+torch>=2.4.0
+torchvision>=0.19.0
+torchaudio>=2.4.0
+
+# 工业级模型加载器与超分支持 (支持 RealESRGAN / Compact / DAT 等架构)
+spandrel>=0.4.0
+
+# 自动化调度与 HTTP 交互 (与 ComfyUI API 通信)
+requests>=2.31.0
+tqdm>=4.66.0

@@ -38,7 +38,7 @@ description: 短剧工业化管线·第 3 工序：H3 物理视频渲染与防�
 - **根因**：Windows 的 WDDM 驱动模型在跨 CUDA Stream 搬运大权重时，会产生严重的内核互斥锁争抢（Mutex Lock Contention）。
 - **处置（ComfyUI 黄金启动参数）**：
   ```powershell
-  python C:\AI\ComfyUI\main.py --disable-auto-launch --disable-mmap --disable-cuda-malloc --disable-async-offload --listen 127.0.0.1 --port 8188
+  python <COMFYUI_PATH>/main.py --disable-auto-launch --disable-mmap --disable-cuda-malloc --disable-async-offload --listen 127.0.0.1 --port 8188
   ```
   利用原生缓存与单流调度避开驱动锁，单段生成耗时稳定保持在 **350 秒（5.8 分钟）**。
 

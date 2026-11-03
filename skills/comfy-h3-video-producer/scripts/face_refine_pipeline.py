@@ -27,7 +27,7 @@ if hasattr(sys.stderr, "reconfigure"):
 
 # 默认权威外部工作流 JSON 路径
 DEFAULT_EXTERNAL_WORKFLOW = Path(
-    r"c:\Users\34903\xwechat_files\wxid_hc2xpfk13zri11_7825\msg\file\2026-11\H3-FaceRefine-远景修脸-固定工作流(1).json"
+    Path(os.environ.get("FACE_REFINE_WORKFLOW", Path(__file__).resolve().parents[1] / "workflows" / "H3-FaceRefine-远景修脸-固定工作流.json"))
 )
 
 # 必需的自定义修脸节点集合
@@ -39,8 +39,8 @@ REQUIRED_FACE_REFINE_NODES = {
 }
 
 # 默认 ComfyUI 仓路径
-DEFAULT_COMFYUI_INPUT = Path(r"C:\AI\ComfyUI\input")
-DEFAULT_COMFYUI_OUTPUT = Path(r"C:\AI\ComfyUI\output")
+DEFAULT_COMFYUI_INPUT = Path(os.environ.get("COMFYUI_PATH", r"C:\AI\ComfyUI")) / "input"
+DEFAULT_COMFYUI_OUTPUT = Path(os.environ.get("COMFYUI_PATH", r"C:\AI\ComfyUI")) / "output"
 
 
 def should_refine_segment(meta: Union[Dict[str, Any], str, None]) -> bool:

@@ -1,0 +1,25 @@
+{
+  "project_title": "1995电子风云_极速验证Demo",
+  "version": "3.0.0",
+  "pipeline_standard": "MiniMax_H3_v2.2_Cinematic",
+  "segments": [
+    {
+      "seg_id": "seg01",
+      "shot_type": "MCU",
+      "camera_motion": "Low-angle tracking push-in shot (仰角跟焦推进)",
+      "duration_sec": 7.29,
+      "frames": 175,
+      "resolution": [832, 480],
+      "speaker": "陈海",
+      "silent_listeners": ["摊主老周"],
+      "dialogue_raw": "1995年夏天，这一箱电子表能净赚50000块！",
+      "dialogue_normalized": "九五年夏天，这一箱电子表能净赚五万块！",
+      "dialogue_char_count": 18,
+      "speech_rate_cps": 2.47,
+      "cushion_seconds": 1.2,
+      "keyframe_ref": "seg01_keyframe.png",
+      "lighting_atmosphere": "1995 gritty vintage neon glow, hazy warm sodium lights, dramatic rim light on jawline",
+      "action_description": "陈海手指重重叩击在木箱上的电子表表盘上，眼神如鹰隼般锐利盯紧对方，神情笃定冷酷。"
+    }
+  ]
+}

@@ -36,10 +36,10 @@ if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
 # 路径常量定义
-WORKSPACE_ROOT = Path(r"c:\Users\34903\Documents\短剧试做")
+WORKSPACE_ROOT = Path(os.environ.get("DRAMA_WORKSPACE", Path.cwd()))
 EPISODES_ROOT = WORKSPACE_ROOT / "欺诈之地_全十集"
 DELIVERY_DIR = WORKSPACE_ROOT / "欺诈之地_全十集_成片交付"
-COMFYUI_OUTPUT_ROOT = Path(r"C:\AI\ComfyUI\output")
+COMFYUI_OUTPUT_ROOT = Path(os.environ.get("COMFYUI_PATH", r"C:\AI\ComfyUI")) / "output"
 
 SKILL_SCRIPTS = WORKSPACE_ROOT / ".agents" / "skills" / "comfy-h3-video-producer" / "scripts"
 SCRIPTS_DIR = WORKSPACE_ROOT / "scripts"
@@ -67,16 +67,16 @@ try:
     from cinematic_audio_mixer import mix_video_with_ducked_bgm, DEFAULT_BGM
 except ImportError:
     mix_video_with_ducked_bgm = None
-    DEFAULT_BGM = WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"
+    DEFAULT_BGM = Path(os.environ.get("DEFAULT_BGM", WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"))
 
 # 寻找 FFmpeg
 try:
     from paths import FFMPEG as FF, FFPROBE
 except Exception:
-    FF = r"C:\Users\34903\scoop\shims\ffmpeg.exe"
+    FF = shutil.which("ffmpeg") or "ffmpeg"
     if not os.path.exists(FF):
         FF = "ffmpeg"
-    FFPROBE = r"C:\Users\34903\scoop\shims\ffprobe.exe"
+    FFPROBE = shutil.which("ffprobe") or "ffprobe"
     if not os.path.exists(FFPROBE):
         FFPROBE = "ffprobe"
 
@@ -666,7 +666,7 @@ def execute_dry_run_pipeline(
             print(f"  [{seg_id}] [✓] 时序: {length}f | {kf_status} | {refine_action}")
 
         # 6. 验证 BGM 混音解析
-        bgm_path = WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"
+        bgm_path = Path(os.environ.get("DEFAULT_BGM", WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"))
         if not bgm_path.exists():
             bgm_path = DEFAULT_BGM
         bgm_status = f"BGM 就绪 ({bgm_path.name})" if bgm_path.exists() else "BGM 缺失 (将直通)"
@@ -848,7 +848,7 @@ def execute_production_pipeline(args: argparse.Namespace) -> int:
                 concat_video_segments(rendered_segments, final_concat_raw)
 
                 # BGM 避让混音
-                bgm_path = WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"
+                bgm_path = Path(os.environ.get("DEFAULT_BGM", WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"))
                 if not bgm_path.exists():
                     bgm_path = DEFAULT_BGM
 

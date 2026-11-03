@@ -20,14 +20,14 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-WORKSPACE_ROOT = Path(r"c:\Users\34903\Documents\短剧试做")
-DEFAULT_BGM = WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"
+WORKSPACE_ROOT = Path(os.environ.get("DRAMA_WORKSPACE", Path.cwd()))
+DEFAULT_BGM = Path(os.environ.get("DEFAULT_BGM", WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"))
 
 # 寻找 FFmpeg
 try:
     from paths import FFMPEG as FF
 except Exception:
-    FF = r"C:\Users\34903\scoop\shims\ffmpeg.exe"
+    FF = shutil.which("ffmpeg") or "ffmpeg"
     if not os.path.exists(FF):
         FF = "ffmpeg"
 

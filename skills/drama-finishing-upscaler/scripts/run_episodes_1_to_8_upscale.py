@@ -18,11 +18,11 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-WORKSPACE_ROOT = Path(r"c:\Users\34903\Documents\短剧试做")
+WORKSPACE_ROOT = Path(os.environ.get("DRAMA_WORKSPACE", Path.cwd()))
 DELIVERY_DIR = WORKSPACE_ROOT / "欺诈之地_全十集_成片交付"
 SCRIPTS_DIR = WORKSPACE_ROOT / "scripts"
-FFPROBE_EXE = r"C:\Users\34903\scoop\shims\ffprobe.exe"
-FFMPEG_EXE = r"C:\Users\34903\scoop\shims\ffmpeg.exe"
+FFPROBE_EXE = shutil.which("ffprobe") or "ffprobe"
+FFMPEG_EXE = shutil.which("ffmpeg") or "ffmpeg"
 
 # 推入 scripts 目录
 if str(SCRIPTS_DIR) not in sys.path:

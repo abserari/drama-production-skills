@@ -95,7 +95,7 @@
 - **根因**：Windows 的 WDDM 显卡驱动模型在跨 CUDA Stream 异步搬运大权重时，会产生严重的内核互斥锁争抢（Mutex Lock Contention）。
 - **ComfyUI 黄金启动参数**：
   ```powershell
-  python C:\AI\ComfyUI\main.py --disable-auto-launch --disable-mmap --disable-cuda-malloc --disable-async-offload --listen 127.0.0.1 --port 8188
+  python <COMFYUI_PATH>/main.py --disable-auto-launch --disable-mmap --disable-cuda-malloc --disable-async-offload --listen 127.0.0.1 --port 8188
   ```
   单段 175 帧生成耗时稳定保持在 **350 秒（5.8 分钟）**。
 
@@ -105,33 +105,71 @@
 
 ---
 
-## 🚀 快速上手与使用
+## 🚀 开箱即用与快速上手指南 (Out-of-the-Box Quick Start)
 
-### 安装为 Agent / Antigravity 技能
-将本项目直接克隆或复制到您的智能体技能目录：
+无论您是克隆本项目本地运行，还是作为 AI Agent / Antigravity 的技能套件挂载，请按照以下标准化 4 步流程开启 100% 工业级复现：
+
+### Step 1: 安装 Python 依赖
+```bash
+pip install -r requirements.txt
+```
+*(注：若需启用 1080p GPU 超分加速，请确保安装与本地 CUDA 版本匹配的 PyTorch)*
+
+### Step 2: 模型资产部署与服务启动
+请参考 [MODELS.md](MODELS.md) 完成 MiniMax H3 与 RealESRGAN 超分模型的下载与放置，并使用 Windows 黄金参数启动 ComfyUI：
+```powershell
+python <COMFYUI_PATH>/main.py --disable-auto-launch --disable-mmap --disable-cuda-malloc --disable-async-offload --listen 127.0.0.1 --port 8188
+```
+
+### Step 3: 一键环境就绪体检医生
+在项目根目录运行环境体检脚本，全面核验 GPU 显存、FFmpeg、ComfyUI 服务联通性与模型完整度：
+```bash
+python scripts/check_environment.py
+```
+> 当检测报告显示核心依赖为 `[PASS]` 时，即代表您的环境已具备与商业短剧同等的生产能力。
+
+### Step 4: 运行 3 分钟极速验证 Demo
+在投入大批量生产前，运行最小可验证闭环：
+```bash
+python examples/quickstart_demo/run_quick_demo.py
+```
+Demo 将自动验证：**台词汉字大写归一化、潜空间 32 整除铁律、单发言人/全员闭嘴提示词装配、侧链音频避让混音与 GPU FP16 超分加载**。
+
+---
+
+## 🛠️ 生产模式全流程操作
+
+### 模式 A: 作为 Agent / Antigravity 技能库使用
+将本项目直接克隆至智能体项目的 `.agents/skills/` 目录：
 ```bash
 git clone https://github.com/abserari/drama-production-skills.git .agents/skills/
 ```
+智能体将自动识别：
+- `drama-director-staging`: 分镜调度、6 大运镜轮换与台词归一化
+- `drama-keyframe-forge`: 分镜三合一定帧与资产风格一致性确认
+- `comfy-h3-render-core`: MiniMax H3 物理渲染、防全员动嘴与 32 整除防御
+- `drama-audio-soundstage`: 谱减法去噪与 FFmpeg 侧链 -14dB 避让混音
+- `drama-finishing-upscaler`: FFmpeg 直拼无损混流与 RealESRGAN 1080p 批量超分
 
-### 独立命令行执行
+### 模式 B: 独立命令行流水线执行
 
 #### 1. 运行分镜提示词编译器
 ```bash
 python scripts/director_engine_v3.py
 ```
 
-#### 2. 全十集自动化流水线母调度（支持断点续产与跳过超分）
+#### 2. 全集自动化流水线母调度（支持断点续产与跳过超分）
 ```bash
-# 阶段一：全量原画商业版生成（跳过超分）
+# 阶段一：全量原画商业版视频批量生成（跳过超分）
 python scripts/run_episodes_1_to_10_master.py --episodes 1-10 --skip-upscale
 
-# 阶段二：逐集 1080p 超分增强
+# 阶段二：逐集 1080p 超分辨率神经增强
 python scripts/run_episodes_1_to_8_upscale.py
 ```
 
 #### 3. 独立音频侧链智能避让配乐
 ```bash
-python scripts/cinematic_audio_mixer.py --input raw.mp4 --output ducked.mp4 --bgm assets/bgm.wav
+python scripts/cinematic_audio_mixer.py --input raw.mp4 --output ducked.mp4 --bgm assets/bgm/90s_business_suspense.wav
 ```
 
 ---

@@ -20,7 +20,7 @@ if hasattr(sys.stdout, "reconfigure"):
 if hasattr(sys.stderr, "reconfigure"):
     sys.stderr.reconfigure(encoding="utf-8", errors="replace")
 
-WORKSPACE_ROOT = Path(r"c:\Users\34903\Documents\短剧试做")
+WORKSPACE_ROOT = Path(os.environ.get("DRAMA_WORKSPACE", Path.cwd()))
 EPISODES_ROOT = WORKSPACE_ROOT / "欺诈之地_全十集"
 
 # ==============================================================================

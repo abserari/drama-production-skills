@@ -18,7 +18,7 @@ import cv2
 from tqdm import tqdm
 from spandrel import ModelLoader
 
-DEFAULT_MODELS_DIR = Path(r"C:\AI\ComfyUI\models\upscale_models")
+DEFAULT_MODELS_DIR = Path(os.environ.get("COMFYUI_PATH", r"C:\AI\ComfyUI")) / "models" / "upscale_models"
 
 
 def get_available_upscale_models() -> dict:
