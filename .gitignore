@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# Large binaries & media
+*.mp4
+*.mkv
+*.mov
+*.avi
+*.7z
+*.zip
+*.tar
+*.gz
+*.safetensors
+*.pth
+*.pt
+*.bin
+*.onnx
+
+# ComfyUI and Temp
+output/
+temp/
+_tmp_*/
+*.log
+*.bak*
+
+# Historical large test data & local checks
+assets/shisei/
+scripts/checks/
+*/scripts/checks/
+
+# OS
+.DS_Store
+Thumbs.db
