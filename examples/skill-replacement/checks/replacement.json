@@ -1,0 +1,18 @@
+{
+  "status": "passed",
+  "scope": "configuration and prompt artifacts",
+  "checks": {
+    "dialogue_preserved": true,
+    "actual_prompt_changed": true,
+    "rollback_identity_restored": true,
+    "b_unchanged": true
+  },
+  "evidence": [
+    "project.json",
+    "recipes/baseline-v1.json",
+    "recipes/noir-v2.json",
+    "artifacts/a-baseline-v1.txt",
+    "artifacts/a-noir-v2.txt",
+    "artifacts/b-unchanged.txt"
+  ]
+}

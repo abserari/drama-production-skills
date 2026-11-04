@@ -1,19 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-《欺诈之地》全十集（EP01~EP10）工业级母生产调度管线
-Master Multi-Episode Production Orchestrator (EP01 - EP10)
-
-核心特性与工程规范：
-1. 【动态集数解析】：支持 --episodes 1-10, 1-5, 1,3,5, EP01-EP05, EP01 等丰富语法；
-2. 【段落级断点续产】：支持 --start-seg N，自动跳过大于 100KB 的已完成分镜；
-3. 【全真干跑模式】：--dry-run 模式下全链路校验 80 分镜 plan.json、提示词语法、首帧状态、修脸策略与混音路径；
-4. 【首帧 I2V 锁脸闸门】：集成 keyframe_gate.py，自动检索并挂载首帧图锁死骨骼几何，无首帧平滑回退 T2V；
-5. 【条件中远景修脸】：集成 face_refine_pipeline.py，MLS / LS 自动触发 768x768 局部重绘，CU / MCU 近景安全穿透；
-6. 【音频门控清洗】：集成 audio_gate.py 谱减滤除持续环境床音，保全对白与短拟音；
-7. 【侧链避让混音】：集成 cinematic_audio_mixer.py 原生 sidechaincompress 影视级人声智能避让混音；
-8. 【1080p 超分辨率】：集成 RealESRGAN x2 工业级超分处理；
-9. 【GPU 显存防碎片】：每段渲染完成后自动调用 /free 释放未用显存碎片，杜绝长周期批量劣化。
-"""
+"""旧批量入口：仅保留离线静态检查；生产请使用 H3 skill 的受检 SOP。"""
 
 import os
 import re
@@ -41,33 +27,29 @@ EPISODES_ROOT = WORKSPACE_ROOT / "欺诈之地_全十集"
 DELIVERY_DIR = WORKSPACE_ROOT / "欺诈之地_全十集_成片交付"
 COMFYUI_OUTPUT_ROOT = Path(os.environ.get("COMFYUI_PATH", r"C:\AI\ComfyUI")) / "output"
 
-SKILL_SCRIPTS = WORKSPACE_ROOT / ".agents" / "skills" / "comfy-h3-video-producer" / "scripts"
-SCRIPTS_DIR = WORKSPACE_ROOT / "scripts"
+SCRIPTS_DIR = Path(__file__).resolve().parent
+SKILL_SCRIPTS = SCRIPTS_DIR.parent / "skills" / "comfy-h3-video-producer" / "scripts"
 
 # 将相关脚本路径推入 sys.path
-for p in [str(SCRIPTS_DIR), str(SKILL_SCRIPTS)]:
+for p in [str(SKILL_SCRIPTS), str(SCRIPTS_DIR)]:
     if p not in sys.path:
         sys.path.insert(0, p)
 
 # 导入核心子模块
 try:
     from keyframe_gate import get_keyframe_for_segment, sync_keyframe_to_comfyui, apply_keyframe_to_graph
-except ImportError:
-    get_keyframe_for_segment = None
-    sync_keyframe_to_comfyui = None
-    apply_keyframe_to_graph = None
+except ImportError as exc:
+    raise ImportError("首帧工具不可用，请修复技能安装，不能静默关闭首帧检查") from exc
 
 try:
     from face_refine_pipeline import should_refine_segment, run_face_refine_on_video
-except ImportError:
-    should_refine_segment = lambda x: False
-    run_face_refine_on_video = None
+except ImportError as exc:
+    raise ImportError("修脸工具不可用，请修复技能安装") from exc
 
 try:
     from cinematic_audio_mixer import mix_video_with_ducked_bgm, DEFAULT_BGM
-except ImportError:
-    mix_video_with_ducked_bgm = None
-    DEFAULT_BGM = Path(os.environ.get("DEFAULT_BGM", WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"))
+except ImportError as exc:
+    raise ImportError("混音工具不可用，请修复技能安装") from exc
 
 # 寻找 FFmpeg
 try:
@@ -550,6 +532,9 @@ def execute_dry_run_pipeline(
     print(f" 目标集数: {episodes} | 起始段落: seg{start_seg:02d}")
     print("=" * 70)
 
+    if not episodes or type(start_seg) is not int or start_seg < 1:
+        print('[Dry-Run 错误] 至少选择一集，start_seg 必须为正整数')
+        return 1
     total_audited_segs = 0
     refine_triggered_count = 0
     refine_bypassed_count = 0
@@ -585,9 +570,20 @@ def execute_dry_run_pipeline(
             print(f"  [Dry-Run 错误] plan.json 解析失败: {e}")
             return 1
 
+        if not isinstance(plan_data, dict):
+            print('[Dry-Run 错误] plan 必须是对象')
+            return 1
         segs = plan_data.get("segs", [])
-        if len(segs) != 8:
-            print(f"  [Dry-Run 警告] {ep_dir.name} 分镜数量为 {len(segs)} (标准预期 8 段)")
+        if not isinstance(segs, list) or not segs or start_seg > len(segs):
+            print('[Dry-Run 错误] 分镜为空或起始段超出范围')
+            return 1
+        if any(not isinstance(seg, dict) for seg in segs):
+            print('[Dry-Run 错误] 每个分镜必须是对象')
+            return 1
+        seg_ids = [seg.get('seg') for seg in segs]
+        if any(not isinstance(s, str) or not re.fullmatch(r'[A-Za-z0-9_-]+', s) for s in seg_ids) or len(set(seg_ids)) != len(seg_ids):
+            print('[Dry-Run 错误] 段号缺失、非法或重复')
+            return 1
 
         # 逐段审计
         for seg_idx, seg in enumerate(segs, 1):
@@ -602,9 +598,10 @@ def execute_dry_run_pipeline(
             shot_type = seg.get("shot_type", "MLS")
 
             # 1. 验证 schema 核心字段
-            if length != 175:
-                print(f"  [Dry-Run 警告] {seg_id} 时序为 {length} 帧 (非 175 帧标准)")
-            if not dialogue_text or not (dialogue_text.startswith("<d>") and dialogue_text.endswith("</d>")):
+            if type(length) is not int or length <= 0:
+                print(f'[Dry-Run 错误] {seg_id} 帧数必须为正整数')
+                return 1
+            if seg.get('dialogue', True) and (not isinstance(dialogue_text, str) or not (dialogue_text.startswith("<d>") and dialogue_text.endswith("</d>"))):
                 print(f"  [Dry-Run 错误] {seg_id} 台词格式异常: '{dialogue_text}'")
                 return 1
 
@@ -623,20 +620,38 @@ def execute_dry_run_pipeline(
                 print(f"  [Dry-Run 错误] {seg_id} 提示词缺失七段式结构: {missing_secs}")
                 return 1
 
-            if "silent glare" not in prompt_content or "mouths closed" not in prompt_content:
-                print(f"  [Dry-Run 警告] {seg_id} 提示词未显式包含段尾闭嘴凝视死条款")
-
             # 3. 验证首帧垫图状态与 0-byte 损坏
             kf = None
             if get_keyframe_for_segment:
-                kf = get_keyframe_for_segment(ep_dir, seg_id)
+                try:
+                    kf = get_keyframe_for_segment(ep_dir, seg_id)
+                except (OSError, ValueError) as exc:
+                    print(f"[FAIL] 首帧文件损坏: {exc}")
+                    return 1
+
+            mode = seg.get('generation_mode', plan_data.get('generation_mode', 'i2v'))
+            if mode not in {'i2v', 't2v', 'first_frame', 'text_to_video'}:
+                print(f'[Dry-Run 错误] 未识别生成模式: {mode}')
+                return 1
+            requires_keyframe = seg.get('requires_keyframe', mode in {'i2v', 'first_frame'})
+            if requires_keyframe and not kf:
+                print(f'[Dry-Run 错误] {seg_id} 缺少必需首帧，不能降级 T2V')
+                return 1
 
             kf_status = "T2V 纯文本生成"
             if kf and kf.exists():
                 if kf.stat().st_size == 0:
                     keyframes_corrupted_count += 1
                     print(f"  [Dry-Run 告警] {seg_id} 首帧图为 0 字节损坏文件: {kf.name} (CORRUPTED)")
+                    return 1
                 else:
+                    try:
+                        from PIL import Image
+                        with Image.open(kf) as source_image:
+                            source_image.verify()
+                    except Exception as exc:
+                        print(f'[Dry-Run 错误] {seg_id} 首帧无法验证: {exc}')
+                        return 1
                     keyframes_ready_count += 1
                     kf_status = f"I2V 锁脸垫图挂载 ({kf.name}, {kf.stat().st_size / 1024:.1f} KB)"
 
@@ -669,7 +684,10 @@ def execute_dry_run_pipeline(
         bgm_path = Path(os.environ.get("DEFAULT_BGM", WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"))
         if not bgm_path.exists():
             bgm_path = DEFAULT_BGM
-        bgm_status = f"BGM 就绪 ({bgm_path.name})" if bgm_path.exists() else "BGM 缺失 (将直通)"
+        if plan_data.get('bgm_required') and not bgm_path.exists():
+            print('[Dry-Run 错误] 必需 BGM 缺失')
+            return 1
+        bgm_status = f"BGM 路径存在 ({bgm_path.name})" if bgm_path.exists() else "无 BGM；未验证混音"
         print(f"  -> 侧链混音状态: {bgm_status}")
 
     print("\n" + "=" * 70)
@@ -677,8 +695,7 @@ def execute_dry_run_pipeline(
     print(f"  - 校验分镜总数: {total_audited_segs} 段 (100% 格式达标)")
     print(f"  - 首帧锁脸垫图: {keyframes_ready_count} 段就绪, {keyframes_corrupted_count} 段损坏")
     print(f"  - 修脸路由决策: {refine_triggered_count} 段触发局部重绘, {refine_bypassed_count} 段近景安全穿透")
-    print("  - 7 段式提示词与 plan.json 校验: 100% PASS")
-    print("  - 执行图图谱构建与侧链混音链路: 100% PASS")
+    print("  - 静态文件检查通过；未验证 ComfyUI 节点/模型兼容、混音效果、视觉质量或交付")
     print("=" * 70)
     return 0
 
@@ -688,204 +705,18 @@ def execute_dry_run_pipeline(
 # ==============================================================================
 
 def execute_production_pipeline(args: argparse.Namespace) -> int:
-    """实体生产管线调度主逻辑"""
-    episodes = parse_episode_args(args.episodes)
-
-    # 干跑模式优先拦截
+    """Legacy entry is inspection-only; production uses the H3 skill's guarded SOP."""
     if args.dry_run:
         return execute_dry_run_pipeline(
-            episodes=episodes,
+            episodes=parse_episode_args(args.episodes),
             start_seg=args.start_seg,
-            episodes_root=EPISODES_ROOT
+            episodes_root=EPISODES_ROOT,
         )
-
-    # 实体渲染前检查 ComfyUI 在线状态
-    if not args.skip_render:
-        if not check_comfyui_alive(server=args.server):
-            print(f"[错误] ComfyUI 服务在 {args.server} 未响应！请先启动 ComfyUI 实体服务或使用 --dry-run 运行。")
-            return 1
-        print(f"[环境] ComfyUI 服务在 {args.server} 在线就绪！")
-
-    DELIVERY_DIR.mkdir(parents=True, exist_ok=True)
-    overall_start_time = time.time()
-
-    print("=" * 70)
-    print(" 《欺诈之地》全十集 (EP01~EP10) 工业级母生产调度系统")
-    print(f" 目标集数: {episodes} | 起始段: seg{args.start_seg:02d} | ComfyUI: {args.server}")
-    print(f" 交付目录: {DELIVERY_DIR}")
-    print(" 核心原则: 台词100%全覆盖 | I2V首帧锁脸 | 条件远景修脸 | 侧链避让混音 | /free显存防泄漏")
-    print("=" * 70)
-
-    for ep_code in episodes:
-        ep_dir = find_episode_dir(ep_code, EPISODES_ROOT)
-        if not ep_dir:
-            print(f"[错误] 未找到集目录: {ep_code}，跳过。")
-            continue
-
-        ep_t0 = time.time()
-        print(f"\n{'#' * 70}")
-        print(f" >>> 开始生产: {ep_dir.name} ({ep_code})")
-        print(f"{'#' * 70}")
-
-        plan_file = ep_dir / "生产" / "plan.json"
-        if not plan_file.exists():
-            plan_file = ep_dir / "plan.json"
-
-        if not plan_file.exists():
-            print(f"[错误] 未找到 plan.json: {plan_file}，跳过该集。")
-            continue
-
-        with open(plan_file, "r", encoding="utf-8") as f:
-            plan_data = json.load(f)
-
-        segs = plan_data.get("segs", [])
-        rendered_segments = []
-
-        work_dir = ep_dir / "生产"
-        output_dir = work_dir / "segments"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        refined_dir = work_dir / "refined_segments"
-        refined_dir.mkdir(parents=True, exist_ok=True)
-        cleaned_dir = work_dir / "cleaned_segments"
-        cleaned_dir.mkdir(parents=True, exist_ok=True)
-
-        for seg_idx, seg in enumerate(segs, 1):
-            seg_id = seg.get("seg", f"seg{seg_idx:02d}")
-            raw_out = output_dir / f"{seg_id}.mp4"
-            refined_out = refined_dir / f"{seg_id}.mp4"
-            cleaned_out = cleaned_dir / f"{seg_id}.mp4"
-
-            if seg_idx < args.start_seg:
-                # 断点续产：优先收集已存在的历史清洗分镜，保证后续全集 8 段拼接正常触发
-                if cleaned_out.exists() and cleaned_out.stat().st_size > 100 * 1024:
-                    print(f"  [{seg_id}] [复用-前序分镜] 已存在完整清洗分镜 -> {cleaned_out.name}")
-                    rendered_segments.append(cleaned_out)
-                elif refined_out.exists() and refined_out.stat().st_size > 100 * 1024:
-                    print(f"  [{seg_id}] [复用-前序分镜] 从精修分镜补做清洗 -> {refined_out.name}")
-                    clean_bed_audio(refined_out, cleaned_out)
-                    rendered_segments.append(cleaned_out)
-                else:
-                    print(f"  [{seg_id}] [跳过] 小于起始段落 --start-seg {args.start_seg} (未找到已清洗文件)")
-                continue
-
-            # 断点续产判定 (文件存在且 > 100KB)
-            if cleaned_out.exists() and cleaned_out.stat().st_size > 100 * 1024 and not args.force_render:
-                print(f"  [{seg_id}] [复用] 已存在完整清洗分镜 -> {cleaned_out.name}")
-                rendered_segments.append(cleaned_out)
-                continue
-
-            # 1. H3 视频生成环节
-            if not args.skip_render:
-                prompt_file = ep_dir / "生产" / "prompts" / f"{seg_id}.txt"
-                if not prompt_file.exists():
-                    prompt_file = ep_dir / "prompts" / f"{seg_id}.txt"
-
-                prompt_content = prompt_file.read_text(encoding="utf-8") if prompt_file.exists() else seg.get("dialogue_text", "")
-
-                # 首帧注入
-                kf_filename = None
-                if get_keyframe_for_segment and sync_keyframe_to_comfyui:
-                    kf = get_keyframe_for_segment(ep_dir, seg_id)
-                    if kf and kf.exists() and kf.stat().st_size > 0:
-                        try:
-                            kf_filename = sync_keyframe_to_comfyui(kf, prefix=ep_code)
-                            print(f"  [{seg_id}] [首帧锁脸] 已注入: {kf_filename}")
-                        except Exception as e:
-                            print(f"  [{seg_id}] [首帧告警] 注入失败，回退 T2V: {e}")
-
-                graph = build_h3_prompt_graph(
-                    prompt_text=prompt_content,
-                    length=seg.get("length", 175),
-                    output_prefix=f"{ep_code}_{seg_id}",
-                    model_type=args.model_type,
-                    first_frame_filename=kf_filename
-                )
-
-                pid = queue_comfyui_prompt(graph, server=args.server)
-                item = wait_for_prompt_completion(pid, server=args.server)
-
-                # 提取 ComfyUI 生成文件并归档到集内 segments 目录
-                found_v = retrieve_comfyui_output_video(item, prefix=f"{ep_code}_{seg_id}")
-                if found_v and found_v.exists():
-                    shutil.copy2(found_v, raw_out)
-                    print(f"  [{seg_id}] [落盘成功] -> {raw_out.name} ({raw_out.stat().st_size / 1024 / 1024:.2f} MB)")
-                else:
-                    raise RuntimeError(f"未能获取 ComfyUI 输出视频: {ep_code} {seg_id}")
-
-                # 显存清理 /free 释放防泄漏 (清空中间激活值缓存)
-                free_comfyui_vram(server=args.server)
-
-            # 2. 条件远景修脸环节
-            if should_refine_segment(seg) and run_face_refine_on_video:
-                char_ref = ep_dir / "生产" / "references" / "char_ref.png"
-                run_face_refine_on_video(
-                    input_video_path=raw_out,
-                    char_ref_path=char_ref if char_ref.exists() else None,
-                    output_video_path=refined_out,
-                    server_url=f"http://{args.server}",
-                    shot_type=seg.get("shot_type")
-                )
-            else:
-                if raw_out.exists():
-                    shutil.copy2(raw_out, refined_out)
-
-            # 3. 音频门控清洗环节
-            if refined_out.exists():
-                clean_bed_audio(refined_out, cleaned_out)
-                rendered_segments.append(cleaned_out)
-
-        # 4. 全集拼接与影视级侧链动态避让混音
-        final_concat_raw = work_dir / f"{ep_code}_concat_raw.mp4"
-        final_ducked = work_dir / f"{ep_code}_final_ducked.mp4"
-        final_1080p = DELIVERY_DIR / f"{ep_dir.name}_1080p.mp4"
-        final_raw_delivery = DELIVERY_DIR / f"{ep_dir.name}_原画商业版.mp4"
-
-        # 判断是否需要重新拼接与混音
-        need_concat_duck = not (final_ducked.exists() and final_ducked.stat().st_size > 500 * 1024 and not args.force_render)
-
-        if need_concat_duck:
-            if len(rendered_segments) == 8:
-                concat_video_segments(rendered_segments, final_concat_raw)
-
-                # BGM 避让混音
-                bgm_path = Path(os.environ.get("DEFAULT_BGM", WORKSPACE_ROOT / "assets" / "bgm" / "90s_business_suspense.wav"))
-                if not bgm_path.exists():
-                    bgm_path = DEFAULT_BGM
-
-                apply_sidechain_ducking_audio(final_concat_raw, final_ducked, bgm_path=bgm_path)
-            else:
-                print(f"[警告] {ep_dir.name} 有效分镜数不足 8 段 ({len(rendered_segments)}/8)，无法拼接全片")
-                continue
-
-        if final_ducked.exists() and final_ducked.stat().st_size > 500 * 1024:
-            # 无论是否超分，均在集中交付目录沉淀原画商业版
-            if not final_raw_delivery.exists() or final_raw_delivery.stat().st_size < 500 * 1024 or args.force_render:
-                shutil.copy2(final_ducked, final_raw_delivery)
-                print(f"  [交付存档] 原画商业版已就绪 -> {final_raw_delivery.name}")
-
-            # 1080p 超分辨率
-            if not args.skip_upscale:
-                if final_1080p.exists() and final_1080p.stat().st_size > 1024 * 1024 and not args.force_render:
-                    print(f"  [1080p 超分] 终片已存在，复用跳过 -> {final_1080p.name}")
-                else:
-                    run_1080p_upscale_step(final_ducked, final_1080p)
-                print(f"[集交付完成] {ep_dir.name} -> {final_1080p.name} (总耗时: {time.time() - ep_t0:.1f}s)")
-            else:
-                print(f"[集原画交付完成] {ep_dir.name} -> {final_raw_delivery.name} (总耗时: {time.time() - ep_t0:.1f}s)")
-
-        # 单集生产交付完成后，执行一次显存碎片规整防泄漏
-        free_comfyui_vram(server=args.server)
-
-    print("\n" + "=" * 70)
-    print(f" 全流程执行完毕！累计耗时: {time.time() - overall_start_time:.1f}s")
-    print(f" 最终成果输出目录: {DELIVERY_DIR}")
-    print("=" * 70)
-    return 0
-
-
-# ==============================================================================
-# CLI 入口
-# ==============================================================================
+    print('[REFUSE] 旧批量生产入口已停用：它没有可靠的提交恢复和版本绑定质检。')
+    print('请按 skills/drama-production-director/SKILL.md 选择制作路径，')
+    print('H3 路径使用 skills/comfy-h3-video-producer/SKILL.md 中的 submit/watch/gate/review/finish SOP。')
+    print('本入口仅保留 --dry-run 静态检查；检查通过不代表模型兼容或已交付。')
+    return 2
 
 def get_cli_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description="《欺诈之地》全十集工业级母生产调度管线")

@@ -1,0 +1,12 @@
+{
+  "segs": [
+    {
+      "seg": "a",
+      "prompt_recipe": "recipes/baseline-v1.json"
+    },
+    {
+      "seg": "b",
+      "prompt_file": "artifacts/b-unchanged.txt"
+    }
+  ]
+}

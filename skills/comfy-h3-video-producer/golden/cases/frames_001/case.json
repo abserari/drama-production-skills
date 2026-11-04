@@ -1,0 +1,14 @@
+{
+ "check": "manual_vlm",
+ "expect": "FAIL",
+ "was": "PASS",
+ "why": "首take画面直出素材架五视图/三视图拼版（参考图泄漏进生成画面）。定量双检全PASS、preflight拦不住——只有G4人工签字能拦。此用例是将来VLM语义判官的必答题：判项=『画面中出现多视图拼版/素材板』",
+ "tolerant": false,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-10-31-00-01-47\\老铁觉醒\\生产\\checks\\seg01_20261101_095839",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0231.mp4",
+ "created": "2026-11-01 11:15:05",
+ "id": "frames_001",
+ "inputs": {
+  "frames": 6
+ }
+}

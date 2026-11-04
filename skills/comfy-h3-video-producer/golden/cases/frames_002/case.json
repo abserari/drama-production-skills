@@ -1,0 +1,14 @@
+{
+ "check": "manual_vlm",
+ "expect": "FAIL",
+ "was": "PASS",
+ "why": "首take语义崩坏：提示词要求半埋残躯+蓝核蓝光+悬浮碎屑+冷蓝暮色，画面却是暖橙空街+人形角色+仰躺机器人，蓝核主事件完全缺失。定量全PASS（光流/直方图/尾拍运动全正常）。VLM语义判官判项：①画面是否出现提示词未要求的活人 ②主光源颜色是否与提示词一致 ③核心事件（蓝核点亮）是否发生",
+ "tolerant": false,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-10-31-00-01-47\\钢铁轰鸣\\生产\\checks\\seg01_20261101_114514",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0236.mp4",
+ "created": "2026-11-01 11:49:24",
+ "id": "frames_002",
+ "inputs": {
+  "frames": 5
+ }
+}

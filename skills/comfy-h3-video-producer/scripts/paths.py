@@ -74,8 +74,16 @@ def _same(a, b):
     return n(a) == n(b)
 
 
+def _inside_skill_tree(path):
+    root = os.path.normcase(os.path.realpath(os.path.dirname(SKILL)))
+    try:
+        return os.path.commonpath([os.path.normcase(os.path.realpath(path)), root]) == root
+    except ValueError:  # Different Windows drives cannot contain one another.
+        return False
+
+
 PROJECT_DIR = _resolve_project()
-if PROJECT_DIR and _same(PROJECT_DIR, SKILL):
+if PROJECT_DIR and _inside_skill_tree(PROJECT_DIR):
     # 硬护栏：绝不把 state/checks 写进技能目录
     PROJECT_DIR = None
 
@@ -109,8 +117,9 @@ BLACKLIST = BLACKLIST_PATH  # 兼容旧名
 
 # ── ComfyUI 与外部工具 ───────────────────────────────────
 COMFY = os.environ.get("H3_COMFY", "http://127.0.0.1:8188").rstrip("/")
-OUTPUT_DIR = os.environ.get("H3_OUTPUT_DIR", r"D:/Comfy-Desktop/ComfyUI-Shared/output")
-INPUT_DIR = os.environ.get("H3_INPUT_DIR", r"D:/Comfy-Desktop/ComfyUI-Shared/input")
+COMFY_ROOT = os.environ.get("COMFYUI_PATH", r"C:/AI/ComfyUI" if os.name == "nt" else os.path.expanduser("~/ComfyUI"))
+OUTPUT_DIR = os.environ.get("H3_OUTPUT_DIR", os.path.join(COMFY_ROOT, "output"))
+INPUT_DIR = os.environ.get("H3_INPUT_DIR", os.path.join(COMFY_ROOT, "input"))
 
 
 def _find_ffmpeg():

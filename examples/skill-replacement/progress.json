@@ -1,0 +1,12 @@
+{
+  "stages": {
+    "replacement": {
+      "status": "passed",
+      "scope": "text prompt recipe only"
+    },
+    "render_comparison": {
+      "status": "pending",
+      "reason": "No claim of visual improvement from text-only comparison"
+    }
+  }
+}

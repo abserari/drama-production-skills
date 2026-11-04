@@ -1,0 +1,12 @@
+{
+ "check": "subtitle",
+ "expect": "PASS",
+ "was": "WARN",
+ "why": "恒定文字区交集面积 0.0002，刚过 2e-4 阈值一个量级内的边缘 WARN；人工确认无水印",
+ "tolerant": true,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-10-31-00-01-47\\锈海拾荒\\生产\\checks\\seg09_20261101_033735",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0217.mp4",
+ "created": "2026-11-01 11:14:39",
+ "id": "subtitle_003",
+ "inputs": {}
+}

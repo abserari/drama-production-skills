@@ -15,6 +15,9 @@ import sys
 import json
 import shutil
 import argparse
+import re
+import hashlib
+from PIL import Image
 from pathlib import Path
 
 # Windows 控制台 UTF-8 防御
@@ -32,6 +35,14 @@ class KeyframeNotFoundError(FileNotFoundError):
 # 默认 ComfyUI 根目录与输入仓 (支持环境变量 COMFYUI_INPUT / COMFYUI_DIR 配置)
 _default_comfy_base = os.environ.get("COMFYUI_DIR", r"C:\AI\ComfyUI")
 DEFAULT_COMFYUI_INPUT = Path(os.environ.get("COMFYUI_INPUT", Path(_default_comfy_base) / "input"))
+
+
+def _verify_image(path):
+    with Image.open(path) as image:
+        image.verify()
+    with Image.open(path) as image:
+        image.load()
+    return path
 
 
 def get_keyframe_for_segment(arg1, arg2=None, force: bool = False) -> Path:
@@ -85,11 +96,11 @@ def get_keyframe_for_segment(arg1, arg2=None, force: bool = False) -> Path:
             ]
             for candidate in candidates:
                 if candidate.exists():
-                    return candidate
+                    return _verify_image(candidate)
             # Also check glob match in dir
             for match in d.glob(f"*{seg_id}*{ext}"):
-                if "keyframe" in match.name.lower() or seg_id.lower() in match.name.lower():
-                    return match
+                if re.search(r"(?<![a-z0-9])" + re.escape(seg_id.lower()) + r"(?![a-z0-9])", match.stem.lower()):
+                    return _verify_image(match)
 
     if force:
         raise KeyframeNotFoundError(f"强制首帧锁脸模式下未找到分镜首帧图: seg_id={seg_id}, project_dir={project_dir}")
@@ -107,7 +118,10 @@ def sync_keyframe_to_comfyui(keyframe_path: Path, prefix: str = "kf") -> str:
         raise FileNotFoundError(f"首帧图文件不存在: {keyframe_path}")
 
     DEFAULT_COMFYUI_INPUT.mkdir(parents=True, exist_ok=True)
-    comfy_filename = f"{prefix}_{keyframe_path.stem}{keyframe_path.suffix}"
+    _verify_image(keyframe_path)
+    digest = hashlib.sha256(keyframe_path.read_bytes()).hexdigest()[:12]
+    safe_prefix = re.sub(r"[^\w-]", "_", prefix)
+    comfy_filename = f"{safe_prefix}_{keyframe_path.stem}_{digest}{keyframe_path.suffix}"
     dest = DEFAULT_COMFYUI_INPUT / comfy_filename
     shutil.copy2(keyframe_path, dest)
     return comfy_filename
@@ -149,6 +163,12 @@ def apply_keyframe_to_graph(
     if not actual_kf:
         return graph
 
+    target_id = str(target_h3)
+    if target_id not in graph or graph[target_id].get("class_type") != "MiniMaxH3ImageToVideo":
+        raise ValueError("Select the actual MiniMaxH3ImageToVideo node before injection")
+    existing = graph.get(str(load_node_id))
+    if existing and (existing.get("class_type") != "LoadImage" or existing.get("inputs", {}).get("image") != actual_kf):
+        raise ValueError("LoadImage id is occupied; choose a fresh node id instead of overwriting")
     graph[str(load_node_id)] = {
         "inputs": {
             "image": str(actual_kf)
@@ -189,7 +209,7 @@ def audit_project_keyframes(project_dir: Path):
             sz_kb = kf.stat().st_size / 1024
             status = f"[OK] I2V 锁脸就绪 ({sz_kb:.1f} KB: {kf.name})"
         else:
-            status = "[--] 待核验 (降级为纯文本 T2V)"
+            status = "[--] 无首帧；所选路径要求首帧时必须阻塞"
         print(f"  [{seg_id:6s}] {status:38s} | {event}...")
 
     print("-" * 65)

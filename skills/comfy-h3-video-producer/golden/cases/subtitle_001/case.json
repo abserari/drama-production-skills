@@ -1,0 +1,12 @@
+{
+ "check": "subtitle",
+ "expect": "PASS",
+ "was": "WARN",
+ "why": "锈蚀条带高对比纹理被误判为字幕文字像素；人工看证据帧确认无字幕。检测器对高对比非文字像素过敏，WARN 不阻断可容忍",
+ "tolerant": true,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-10-31-00-01-47\\锈海拾荒\\生产\\checks\\seg07_20261101_030609",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0028.mp4",
+ "created": "2026-11-01 11:14:34",
+ "id": "subtitle_001",
+ "inputs": {}
+}

@@ -24,12 +24,14 @@ import json
 import os
 import sys
 import time
+import uuid
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import paths  # noqa: E402
 import h3proj  # noqa: E402
 import gpu_vram  # noqa: E402
+from production_state import atomic_json, fingerprint, file_hash, gpu_lock, render_context, connected_first_frame
 
 
 # ── 台账帮手 ────────────────────────────────────────────
@@ -62,12 +64,14 @@ def _check_fresh(accept=False):
     """
     import h3wf
     try:
-        st = h3wf.refresh_if_stale(apply=True, verbose=True)
+        st = h3wf.refresh_if_stale(apply=False, verbose=False)
+        if st.get("changed") and not accept:
+            raise SystemExit("[REFUSE] 工作流源文件已修改；先显式重新握手，或明确继续固定旧版本")
         if st.get("mode") == "missing":
             print(f"[warn] 握手记录的工作流文件不在了：{st.get('path')}\n"
                   f"       画布上改过参数的话，先 Ctrl+S 保存，否则这次的图仍是旧参数。")
     except Exception as e:
-        print(f"[warn] 画布文件核对跳过（{type(e).__name__}: {e}）")
+        raise SystemExit(f"[REFUSE] 工作流核对失败，修复后再提交: {type(e).__name__}: {e}") from e
     wm, _ = _wf()
     if "chain" not in wm or "take1_prefix" not in wm:
         raise SystemExit("[REFUSE] wf_map.json 是旧版握手的（没有工程名/一采前缀）。\n"
@@ -214,7 +218,43 @@ def resolve_cont(chain_name, cid, mode="auto", frames=39):
     return cont, "承接 %s（%s，take %d）" % (pid, got.get("cont_path"), take), "cont"
 
 
+def _reconcile_submission(record):
+    """Find the exact accepted request; absence from history is not proof of rejection."""
+    pid = record.get("prompt_id")
+    client_id = record.get("submission_client_id")
+    queue = paths.http_json("/queue", timeout=15)
+    history = paths.http_json("/history", timeout=15)
+    rows = list(queue.get("queue_running") or []) + list(queue.get("queue_pending") or [])
+    rows += [v.get("prompt") for v in history.values() if isinstance(v, dict) and v.get("prompt")]
+    for row in rows:
+        if len(row) >= 4 and ((pid and row[1] == pid) or
+                              (client_id and isinstance(row[3], dict) and row[3].get("client_id") == client_id)):
+            return str(row[1])
+    return None
+
+
 def cmd_submit(a):
+    paths.require_project()
+    if a.dry_run:
+        return _cmd_submit(a)
+    with gpu_lock(paths.COMFY):
+        d, s = seg_state(a.seg)
+        if s and (s.get("submission_state") in ("submitting", "unknown") or
+                  s.get("status") == "生成中"):
+            pid = _reconcile_submission(s)
+            if pid:
+                s.update(prompt_id=pid, submission_state="accepted", status="生成中")
+                save(d)
+                print(json.dumps({"reused_submission": True, "prompt_id": pid, "next_action": "watch"}))
+                return
+            raise SystemExit("[REFUSE] 上次提交结果尚未核清，禁止重投（包括 --force）；核对原 client_id/服务记录")
+        queue = paths.http_json("/queue", timeout=15)
+        if queue.get("queue_running") or queue.get("queue_pending"):
+            raise SystemExit("[REFUSE] ComfyUI 已有任务，请等队列空闲；不会清理其他任务")
+        return _cmd_submit(a)
+
+
+def _cmd_submit(a):
     paths.require_project()
     wm, g = _wf()
     wm = _check_fresh(a.accept_workflow_change)
@@ -265,11 +305,11 @@ def cmd_submit(a):
     prompt = open(prompt_file, encoding="utf-8").read().strip()
     # 闸门 G1：段规划表里必须有这一段（plan.json 为空的首次开工除外）
     order = h3proj.plan_order()
-    if order and a.seg not in order:
+    if not order or a.seg not in order:
         raise SystemExit(f"[REFUSE] plan.json 里没有 {a.seg}。先把段规划表补全"
                          "（references/directing_bridge.md 第 7 节），否则等于没有分镜就开始烧算力。")
     spec = h3proj.seg_spec(a.seg)
-    length = int(a.length or spec.get("length") or 243)
+    length = int(a.length or spec.get("length") or 175)
     # 合法段长：实测链路（一采直出、无超分/无插帧）可跑 124 / 175；243 留给带插帧的链路。
     # 175 帧 = 7.29s，仍在单次渲染 8s 上限内，但净新画面比 124 多 85%（见下 cont_frames）。
     if length not in (124, 175, 243):
@@ -327,7 +367,7 @@ def cmd_submit(a):
         cid, clip_note = ensure_clip(chain_name, a.seg, length,
                                      create=not a.dry_run, trim_frames=trim_in)
     except Exception as e:
-        clip_note = f"工程档案接口不可用（{type(e).__name__}），按旧方式提交（本段可能不登记进时间轴）"
+        raise SystemExit(f"[REFUSE] 工程档案接口不可用，先修复连接: {e}")
     print(f"[chain] {chain_name} · {clip_note}")
     print(f"[chain] {a.seg} 段长 {length} 帧，头部剪 {trim_in} 帧，净新画面 {length - trim_in} 帧")
 
@@ -347,7 +387,7 @@ def cmd_submit(a):
             f"  · h3_chain/{chain_name}/ 里上一段的 .cont.safetensors 是否还在\n"
             "  · 确实要一段独立画面（不是续接）→ 加 --allow-nocont 或 --cont off")
     if cont_kind == "error":
-        print("[WARN] 工程档案读不到，无法确认续接是否成立 —— 跑完先核对本段首帧和上一段尾帧。")
+        raise SystemExit("[REFUSE] 工程档案读不到，无法确认续接")
 
     chain = {"name": chain_name, "clip": cid or a.seg, "shot": a.seg}
     key = chain["clip"]                      # 档案里的键是段落 id，不是段名
@@ -395,6 +435,27 @@ def cmd_submit(a):
 
     seed = int(a.seed) if a.seed is not None else _seednext()
     graph[roles["seed"]]["inputs"]["seed"] = seed
+    # Snapshot actual prompt bytes, workflow, declared materials and the segment only.
+    # Mixing settings are deliberately excluded from render identity.
+    material_files = [prompt_file, paths.WF_SNAPSHOT]
+    asset_file = _assets_default(a.seg, a.assets)
+    if asset_file:
+        material_files.append(asset_file)
+    for asset in assets:
+        material = str(asset.get("file") or "")
+        material_files.append(material if os.path.isabs(material) else os.path.join(paths.INPUT_DIR, material))
+    keyframe = spec.get("keyframe") or spec.get("first_frame")
+    mode = str(spec.get("generation_mode") or pj.get("production_path") or (pj.get("production") or {}).get("route") or "").lower()
+    required_frame = spec.get("requires_keyframe", pj.get("requires_keyframe", False)) or mode in ("i2v", "i2va", "fl2va", "first_frame", "first_last_frame")
+    if required_frame:
+        if not keyframe:
+            raise SystemExit("[REFUSE] 本路径要求首帧但计划未指定 keyframe")
+        keyframe = keyframe if os.path.isabs(keyframe) else os.path.join(paths.PROJECT_DIR, keyframe)
+        material_files.append(keyframe)
+        if not connected_first_frame(graph, keyframe, paths.INPUT_DIR):
+            raise SystemExit("[REFUSE] 所需首帧的实际内容未接入 first_frame；不回退 T2V")
+    input_snapshot = {"segment_spec": fingerprint(spec), "production_context": render_context(pj), "files": {
+        os.path.abspath(p): file_hash(p) for p in material_files}}
 
     # ── 摘掉「收片归位」这类叶子节点（collector/adopt）──
     # 它们不接渲染主链，靠"扫 output 目录最近 N 秒内的三采成片"来找文件——天生有竞态：
@@ -443,7 +504,7 @@ def cmd_submit(a):
             import comfy_convert
             probs = comfy_convert.validate(graph, comfy_convert.fetch_object_info())
         except Exception as e:
-            probs = [f"跳过图校验（{type(e).__name__}: {e}）"]
+            probs = [f"图校验不可用（{type(e).__name__}: {e}）"]
         print(json.dumps({"dry_run": True, "seg": a.seg, "length": length, "seed": seed,
                           "nodes": len(graph), "roles": {k: roles[k] for k in
                                                           ("rack", "desk", "cast", "seed", "final")},
@@ -462,15 +523,27 @@ def cmd_submit(a):
                 print("  -", p)
         print("[dry-run] 已通过 preflight 与图组装，未提交。")
         return
+    client_id = "drama-" + uuid.uuid4().hex
+    s.update(submission_state="submitting", submission_client_id=client_id,
+             input_snapshot=input_snapshot, input_fingerprint=fingerprint({"graph": graph, "inputs": input_snapshot}),
+             submitted_graph=graph, prompt_file=os.path.relpath(prompt_file, paths.PROJECT_DIR),
+             baseline=baseline, baseline_ts=t0, submit_ts=t0, seed=seed, length=length,
+             workflow_fp=wm.get("fingerprint"), chain=chain, cont=cont)
+    s.pop("prompt_id", None)
+    save(d)  # Durable intent before a network call whose response may be lost.
     try:
-        res = paths.http_json("/prompt", {"prompt": graph, "client_id": "workbuddy-h3"}, timeout=120)
+        res = paths.http_json("/prompt", {"prompt": graph, "client_id": client_id}, timeout=120)
     except Exception as e:
-        raise SystemExit(f"[FATAL] 提交失败: {e}")
+        s.update(submission_state="unknown", status="待核对", submission_error=str(e))
+        save(d)
+        raise SystemExit(f"[REFUSE] 提交回执不明，先核对 client_id={client_id}，禁止盲目重投: {e}")
     if res.get("error") or not res.get("prompt_id"):
+        s.update(submission_state="rejected" if res.get("error") else "unknown", status="失败待复核")
+        save(d)
         print(json.dumps(res, ensure_ascii=False)[:3000])
         raise SystemExit("[FATAL] ComfyUI 拒绝了这次提交")
 
-    s.update({"status": "生成中", "prompt_id": res["prompt_id"], "seed": seed, "length": length,
+    s.update({"status": "生成中", "submission_state": "accepted", "prompt_id": res["prompt_id"], "seed": seed, "length": length,
               "submit_ts": time.time(), "baseline": baseline, "baseline_ts": t0,
               "prompt_file": os.path.relpath(prompt_file, paths.PROJECT_DIR),
               "workflow_fp": wm.get("fingerprint"), "preflight": "PASS",
@@ -607,7 +680,7 @@ def cmd_watch(a):
     if fast and fast.get("verdict") not in ("PASS", "NO_AUDIO"):
         bad = [c["name"] for c in (fast.get("checks") or []) if not c.get("pass_")]
         print(f"[fast] 音频快检不过（{('、'.join(bad)) or fast.get('verdict')}）→ 立即中断")
-        _kill_queue()
+        _kill_queue((s or {}).get("prompt_id"))
         bl = _blacklist()
         if s.get("seed") is not None and s["seed"] not in bl:
             bl.append(s["seed"])
@@ -633,7 +706,7 @@ def cmd_watch(a):
         # 硬错即断：中断当前执行 + 清空队列里排着的任务。
         # 只发 /interrupt 只停"正在跑的那个节点"，队列里 pending 的同类任务
         # 会接着占用 GPU，下一条要白等 —— 必须一起清掉。
-        _kill_queue()
+        _kill_queue((s or {}).get("prompt_id"))
         bl = _blacklist()
         if s.get("seed") is not None and s["seed"] not in bl:
             bl.append(s["seed"])
@@ -746,32 +819,21 @@ def cmd_final(a):
 
 
 # ── abort / seednext / blacklist ────────────────────────
-def _kill_queue():
-    """中断正在跑的节点，清掉队列里还没开始的任务，**并把模型从显存里卸掉**。
+def _kill_queue(prompt_id):
+    """Cancel only this durable task id; never clear someone else's queue."""
+    if not prompt_id:
+        raise SystemExit("[REFUSE] 没有本任务编号，不能执行全局中断或清队列")
+    queue = paths.http_json("/queue", timeout=15)
+    running = {str(row[1]) for row in queue.get("queue_running", [])}
+    pending = {str(row[1]) for row in queue.get("queue_pending", [])}
+    if str(prompt_id) in pending:
+        paths.http_json("/queue", {"delete": [prompt_id]}, timeout=15)
+    if str(prompt_id) in running:
+        paths.http_json("/interrupt", {"prompt_id": prompt_id}, timeout=15)
+    after = paths.http_json("/queue", timeout=15)
+    if not after.get("queue_running") and not after.get("queue_pending"):
+        gpu_vram.free(wait=0)
 
-    只发 /interrupt 时，ComfyUI 停的是"当前节点"，队列里 pending 的任务
-    仍然占着队位，下一条要等它们跑完 —— 判失败的段必须立刻让出 GPU。
-
-    更要命的是**没人做收尾清理**：工作流末尾的 BanZhang_VRAM_Cleaner
-    （323/324）本来是负责卸载模型、清缓存的，但中断把执行链砍在第 N 步，
-    它根本没轮到。结果模型与执行缓存原样压在显存里，下一个任务启动时
-    VRAM_Guard（264，预留 1GB）判定超限，于是**每采一步都卸载重载一次**：
-
-        脏显存：299.90s/it × 6 步 ≈ 30 分钟（GPU 100% 但只有 42W，空转搬运）
-        清干净： 45.18s/it × 6 步 ≈ 4 分钟（GPU 100%，81W）
-
-    实测 2026-10-25：seg09 连抽三版、前两版 AUTO_ABORT，显存吃到
-    7521/8151 MiB，第三版从 5 分钟变成 33 分钟。补发 /free 后回到 45s/步。
-    所以这里必须 中断 → 清队列 → /free，三步一起做。
-    """
-    for ep, payload in (("/interrupt", {}), ("/queue", {"clear": True})):
-        try:
-            paths.http_json(ep, payload, timeout=15)
-        except Exception:
-            pass
-    # 补做 Cleaner 的活：卸载模型 + 清 CUDA 缓存。wait 给 2.5 秒是因为
-    # /interrupt 之后当前节点要几秒才退出，太早发 /free 会被排到执行结束后。
-    gpu_vram.free(wait=2.5)
 
 
 def _fast_audio_gate(video, dialogue="auto", fx="auto"):
@@ -799,13 +861,13 @@ def _fast_audio_gate(video, dialogue="auto", fx="auto"):
 def _blacklist():
     try:
         return json.load(open(paths.BLACKLIST_PATH, encoding="utf-8"))
-    except Exception:
+    except FileNotFoundError:
         return []
 
 
 def _save_blacklist(bl):
     os.makedirs(os.path.dirname(paths.BLACKLIST_PATH), exist_ok=True)
-    json.dump(bl, open(paths.BLACKLIST_PATH, "w", encoding="utf-8"))
+    atomic_json(paths.BLACKLIST_PATH, bl)
 
 
 def _seednext():
@@ -820,7 +882,7 @@ def _seednext():
 def cmd_abort(a):
     paths.require_project()
     d, s = seg_state(a.seg)
-    _kill_queue()
+    _kill_queue((s or {}).get("prompt_id"))
     if s:
         bl = _blacklist()
         if s.get("seed") is not None and s["seed"] not in bl:

@@ -1,0 +1,17 @@
+{
+  "schema_version": "drama.review.v1",
+  "review_id": "",
+  "stage_id": "",
+  "artifact_path": "",
+  "artifact_sha256": "",
+  "reviewer_kind": "agent",
+  "reviewer_id": "",
+  "mode": "blocking",
+  "status": "needs_review",
+  "policy_version": "review-v1",
+  "criteria": [],
+  "evidence": [],
+  "issues": [],
+  "human_source": null,
+  "next_action": "inspect actual artifact"
+}

@@ -7,12 +7,13 @@
 1. 彻底解决短剧“只有干音无配乐”或“BGM盖过对白”的工业痛点；
 2. 基于 FFmpeg 原生 sidechaincompress (侧链动态压缩) 滤镜；
 3. 人声对白自动避让 (Audio Ducking)：
-   - 当主角/人物开口说话时，BGM 瞬时下潜 -14dB (衰减至约 20%)，台词字字清晰；
+   - 当主角/人物开口说话时，BGM 按信号电平及侧链参数动态衰减，实际效果需试听；
    - 台词间隙或紧张动作戏份时，BGM 在 0.3-0.5s 内平滑回升至满电平，影视张力拉满！
 4. 视频流物理直通 (-c:v copy)，秒级混音，画质无任何次级编码损失。
 """
 
 import os
+import shutil
 import sys
 import argparse
 import subprocess

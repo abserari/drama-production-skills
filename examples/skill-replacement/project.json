@@ -1,0 +1,29 @@
+{
+  "selected_skills": {
+    "prompt": "h3-prompt-writing"
+  },
+  "recipe_overrides": {
+    "a": "baseline-v1"
+  },
+  "history": [
+    {
+      "recipe": "baseline-v1",
+      "input_fingerprint": "d67093c5cf29f49dbb9f81b8c99afe4da25a25af8e59f64fc6ada4793ff92d0a",
+      "b_sha256": "92b8eb3b575e1aa2c073e70b42a9d520ac2cd204f685422331069073a45a5f3e",
+      "writing_identity": "6545392f589a33e1dcaf6cb91f17e480e8106be90f73bea118a8c150fb668ca8"
+    },
+    {
+      "recipe": "noir-v2",
+      "input_fingerprint": "af02fbf746f9c1135f6de29149be3539442ef32a4ce08a714ae137f6b202689e",
+      "b_sha256": "92b8eb3b575e1aa2c073e70b42a9d520ac2cd204f685422331069073a45a5f3e",
+      "writing_identity": "6545392f589a33e1dcaf6cb91f17e480e8106be90f73bea118a8c150fb668ca8"
+    },
+    {
+      "recipe": "baseline-v1",
+      "input_fingerprint": "d67093c5cf29f49dbb9f81b8c99afe4da25a25af8e59f64fc6ada4793ff92d0a",
+      "b_sha256": "92b8eb3b575e1aa2c073e70b42a9d520ac2cd204f685422331069073a45a5f3e",
+      "writing_identity": "6545392f589a33e1dcaf6cb91f17e480e8106be90f73bea118a8c150fb668ca8"
+    }
+  ],
+  "status": "text_experiment_completed"
+}

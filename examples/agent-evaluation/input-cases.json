@@ -1,0 +1,176 @@
+[
+  {
+    "id": "01-create",
+    "task": "规划两人讨债冲突的纯文字短剧；只交付规划。",
+    "project": {
+      "goal": "文字规划"
+    },
+    "plan": {
+      "stages": [],
+      "segs": []
+    }
+  },
+  {
+    "id": "02-input",
+    "task": "继续 I2V 分镜 a 的生成。",
+    "project": {
+      "production_path": "i2v",
+      "requires_keyframe": true
+    },
+    "plan": {
+      "segs": [
+        {
+          "seg": "a",
+          "requires_keyframe": true,
+          "keyframe": "missing.png"
+        }
+      ]
+    }
+  },
+  {
+    "id": "03-style",
+    "task": "仅把 a 改为高反差黑色电影风格，b 和原剧本不变。",
+    "project": {
+      "selected_skills": {
+        "prompt": "baseline-v1"
+      }
+    },
+    "plan": {
+      "segs": [
+        {
+          "seg": "a"
+        },
+        {
+          "seg": "b"
+        }
+      ]
+    },
+    "progress": {
+      "segs": {
+        "a": {
+          "status": "passed"
+        },
+        "b": {
+          "status": "passed"
+        }
+      }
+    }
+  },
+  {
+    "id": "04-resume",
+    "task": "上次提交后断线，请恢复 a 的进度。",
+    "project": {},
+    "plan": {
+      "segs": [
+        {
+          "seg": "a"
+        }
+      ]
+    },
+    "progress": {
+      "segs": {
+        "a": {
+          "status": "blocked",
+          "external_job_id": "known-job",
+          "next_action": "reconcile_external_job"
+        }
+      }
+    },
+    "history": {
+      "known-job": {
+        "status": "running"
+      }
+    }
+  },
+  {
+    "id": "05-broken",
+    "task": "检查 artifact.mp4 能否复用交付。",
+    "project": {},
+    "plan": {
+      "segs": [
+        {
+          "seg": "a",
+          "artifact": "artifact.mp4"
+        }
+      ]
+    },
+    "files": {
+      "artifact.mp4": "broken media"
+    }
+  },
+  {
+    "id": "06-reviews",
+    "task": "判断 a 能否交付，是否可以继续无关的 b。",
+    "plan": {
+      "segs": [
+        {
+          "seg": "a"
+        },
+        {
+          "seg": "b"
+        }
+      ]
+    },
+    "checks": {
+      "a": {
+        "mode": "blocking",
+        "status": "failed"
+      },
+      "b": {
+        "mode": "nonblocking",
+        "status": "needs_review"
+      }
+    }
+  },
+  {
+    "id": "07-deliver",
+    "task": "报告本集交付状态。",
+    "plan": {
+      "segs": [
+        {
+          "seg": "a"
+        },
+        {
+          "seg": "b"
+        }
+      ]
+    },
+    "progress": {
+      "segs": {
+        "a": {
+          "status": "passed"
+        },
+        "b": {
+          "status": "needs_review"
+        }
+      }
+    }
+  },
+  {
+    "id": "08-rollback",
+    "task": "恢复 baseline-v1 并保留 candidate-v2 的结果与失败审查。",
+    "project": {
+      "selected_skills": {
+        "prompt": "candidate-v2"
+      },
+      "previous_skills": {
+        "prompt": "baseline-v1"
+      }
+    },
+    "plan": {
+      "segs": [
+        {
+          "seg": "a"
+        }
+      ]
+    },
+    "checks": {
+      "candidate": {
+        "status": "failed"
+      }
+    },
+    "files": {
+      "candidate-result.md": "candidate-v2: dramatic contrast"
+    }
+  }
+]

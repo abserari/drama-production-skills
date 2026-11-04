@@ -1,0 +1,52 @@
+{
+ "n_beats": 3,
+ "tone": {
+  "expect": "cold",
+  "weight": 2
+ },
+ "light": {
+  "hue": "blue",
+  "appear_by_beat": 2,
+  "hold": true,
+  "min_end_frac": 0.004,
+  "weight": 3
+ },
+ "ending": {
+  "light": "blue",
+  "min_end_frac": 0.004,
+  "weight": 2
+ },
+ "collage": {
+  "weight": 3
+ },
+ "clip": {
+  "must": [
+   {
+    "text": "a rusty yellow robot lying broken under rubble in a ruined street",
+    "beats": [
+     0
+    ]
+   },
+   {
+    "text": "a glowing blue energy core on a broken robot",
+    "beats": [
+     1,
+     2
+    ]
+   },
+   {
+    "text": "metal debris floating in the air around a robot",
+    "beats": [
+     2
+    ]
+   }
+  ],
+  "neg": [
+   "a real human person walking",
+   "a face of a person",
+   "a collage of multiple views of one object on a grid",
+   "movie subtitles text at the bottom of the screen"
+  ],
+  "weight": 3
+ }
+}

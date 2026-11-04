@@ -1,72 +1,20 @@
 ---
 name: comfy-h3-render-core
-description: 短剧工业化管线·第 3 工序：H3 物理视频渲染与防翻车调度。负责与本地 ComfyUI 服务交互，调度 MiniMax H3 进行 Turbo 8-step 视频生成。硬核沉淀：Windows WDDM 驱动锁防御、潜空间 32 整除铁律、单人发音锁定与全员闭嘴抑制指令装配、首帧 I2V 安全注入、分镜间显存防泄漏。
+description: 执行短剧H3 渲染工序；由总协调按项目路径调用，可独立用于该工序的已有素材。
 ---
-
-# ComfyUI H3 Render Core (H3 物理渲染与调度工序)
-
-> **工序定位**：短剧物理生成核心工序。
-> **核心原则**：不写死 ComfyUI 节点号，严防 Windows WDDM 驱动锁死，强制执行单人发音锁定与潜空间尺寸安全检查。
-
----
-
-## 1. 运行契约与输入输出
-
-- **输入**：
-  1. `plan.json`（含运镜、对白、时序 175 帧）；
-  2. 第 2 工序的定帧垫图：`segments/{seg_id}_keyframe.png`；
-  3. `style_bible.json`。
-- **输出**：
-  1. H3 原生生成视频：`segments/{seg_id}.mp4`（带原生音画）；
-  2. 显存状态监控日志与渲染耗时台账。
-
----
-
-## 2. 硬核 SOP：三大防翻车物理铁律（带数字特征与报错反例）
-
-### 2.1 铁律一：潜空间尺寸 32 整除定律（防 VAE 潜空间崩溃）
-- **现象/报错**：
-  `RuntimeError: shape '[1, 24, 1, 1, 15, 2, 26, 2]' is invalid for input of size 38160`
-- **根因**：MiniMax H3 的 3D Patch 尺寸要求宽度必须被 16 整除，且商必须为偶数（即 `width % 32 == 0`）。
-- **判据与处置**：
-  - **严禁使用**：848×480（848/16=53 为奇数，无法被 patch=2 整除，必崩！）；
-  - **强制锁定**：标准宽屏一律锁定 **832×480**（832/16=52 为偶数，52/2=26 完美整除！）。
-
-### 2.2 铁律二：Windows WDDM 驱动互斥锁防御（防暴慢 15 倍）
-- **现象**：
-  在 Windows 下启用 `cudaMallocAsync` 或多流异步搬运（`async-offload`）后，单步采样从 40 秒暴跌至 600 秒（单段耗时高达 70 分钟）。
-- **根因**：Windows 的 WDDM 驱动模型在跨 CUDA Stream 搬运大权重时，会产生严重的内核互斥锁争抢（Mutex Lock Contention）。
-- **处置（ComfyUI 黄金启动参数）**：
-  ```powershell
-  python <COMFYUI_PATH>/main.py --disable-auto-launch --disable-mmap --disable-cuda-malloc --disable-async-offload --listen 127.0.0.1 --port 8188
-  ```
-  利用原生缓存与单流调度避开驱动锁，单段生成耗时稳定保持在 **350 秒（5.8 分钟）**。
-
-### 2.3 铁律三：单人发音与闭嘴抑制指令装配（消灭全员动嘴）
-在构建 `[Subject 1]` 与 `[Action 1]` 时，必须强制执行分离装配：
-- **`[Subject 1]`**：`Primary speaker: [SpeakerName], alongside [ListenerName] (silent listener).`
-- **`[Action 1]` 核心原语**：
-  ```
-  Only [SpeakerName] is actively speaking with natural, synchronized Mandarin lip movement, [Action]. 
-  Crucial requirement: [ListenerName] remains strictly silent with lips tightly sealed and mouth completely closed, neither speaking nor making any mouth motions, showing a tense glare. 
-  In the final 1.2 seconds, all characters firmly close their mouths, ending on a tense silent glare.
-  ```
-
----
-
-## 3. 硬核 SOP：显存防碎片与断点续产保护
-
-1. **分镜间显存回收**：
-   每个分镜渲染完毕后，必须调用 ComfyUI `/free` 端点：
-   ```python
-   payload = {"unload_models": False, "free_memory": True}
-   ```
-   清空 PyTorch 中间 3D 潜空间张量缓存，防止长周期连续生产累积 OOM。
-2. **断点续产防重复渲染**：
-   检测 `segments/{seg_id}.mp4`，若文件已存在且大小大于 100KB，直接打印 `[复用]` 跳过，支持秒级断点续跑。
-
----
-
-## 4. 专属工具脚本
-
-- **H3 执行图组装与调度引擎**：`python scripts/h3_render_orchestrator.py --plan plan.json --server 127.0.0.1:8188`
+# H3 渲染
+## 适用与不适用
+只处理当前工序。按项目目标选择，不要求所有项目执行本工序。
+## 输入与前置检查
+读项目计划、上游产物、所选技能版本和验收标准。检查真实文件、工具依赖及必需输入；缺失则 blocked，不猜测成功。
+## SOP 与工具
+采用低成本预览与高质量精修时，按 [一采验收与精修 SOP](references/preview-refine.md) 执行：一采不合格先重抽，合格产物及其哈希才能进入模型二采或超分。选择最低可判读的分辨率，实际效果/耗时决定精修路线。
+按需读取 [技术参考](references/legacy-techniques.md)，`scripts/h3_render_orchestrator.py` 是 Python 函数库，build_h3_prompt_graph 构建原生 FL2VA/I2V 图，不是 --plan 命令。提交前对照实际 object_info；Ref2VA 必须使用已验证的参考工作流。已有 CSGlide 路径按 comfy-h3-video-producer 操作；无 CSGlide 时可由 agent 用原生图与 ComfyUI HTTP 接口，仍需记录提交意图、client_id、prompt_id 和真实图，遵守同一恢复和审查制度。参考中的旧固定八镜、统一时长、强制运镜轮换、凝视、性能及改善比例均为历史配方或未复核描述，不是本项目通用要求。只采用与实际能力相符的部分。
+## 输出与保存
+按 plan 约定输出到项目目录，返回路径、实际参数、输入与产物哈希及工具结果；不要将运行状态写进技能目录。
+## 完成证据
+物理完整性检查和内容审查分别记录。缺证据标记 needs_review；关键检查失败不得交给下游作为合格产物。
+## 失败与恢复
+暂态最多重试两次、质量返工最多两轮。先查已有任务与产物，不重复提交未知任务；依赖变化只返工相关下游。角色审查不能由 agent 代签人工。
+## 可替换与约束
+风格、镜头、配方可换；模型物理限制按实际服务检查。更换后记录来源和版本，保留旧版，按固定案例比较后激活。

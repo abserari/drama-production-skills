@@ -3,6 +3,7 @@
 MiniMax H3 执行图构建与物理调度器 (H3 Render Orchestrator)
 """
 
+import os
 import sys
 import json
 import uuid
@@ -22,13 +23,26 @@ def build_h3_prompt_graph(
     length: int = 175,
     seed: int = 42,
     output_prefix: str = "griftlands/seg01",
-    model_type: str = "ref2va",
+    model_type: str = "fl2va",
     first_frame_filename: Optional[str] = None
 ) -> dict:
     """构建 MiniMax H3 原生执行图 (32整除防御与 I2V 首帧挂载)"""
-    # 尺寸 32 整除安全防御
-    assert width % 32 == 0, f"宽度 {width} 必须为 32 的整数倍！"
-    assert height % 16 == 0, f"高度 {height} 必须为 16 的整数倍！"
+    # Explicit exceptions remain active under python -O. These are this template's
+    # constraints, not universal requirements for every video model.
+    for label, value, divisor in (("width", width, 32), ("height", height, 32)):
+        if type(value) is not int or value <= 0 or value % divisor:
+            raise ValueError(f"{label} must be a positive integer divisible by {divisor}")
+    if type(length) is not int or length <= 0:
+        raise ValueError("length must be a positive integer")
+    if model_type not in {"ref2va", "fl2va"}:
+        raise ValueError("model_type must be ref2va or fl2va")
+    if not isinstance(prompt_text, str) or not prompt_text.strip():
+        raise ValueError("prompt_text must be non-empty text")
+    if type(seed) is not int or seed < 0:
+        raise ValueError("seed must be a non-negative integer")
+
+    if model_type == "ref2va":
+        raise ValueError("This I2V builder uses FL2VA; full-reference mode requires a verified Ref2VA workflow")
 
     unet_file = (
         "minimax_h3_ref2va_pruned_int8_convrot.safetensors"
@@ -60,7 +74,7 @@ def build_h3_prompt_graph(
         "12": {"inputs": {"samples": ["11", 0], "vae": ["3", 0]}, "class_type": "VAEDecode"},
         "13": {"inputs": {"samples": ["11", 0], "vae": ["4", 0]}, "class_type": "VAEDecodeAudio"},
         "14": {"inputs": {"images": ["12", 0], "audio": ["13", 0], "fps": 24.0, "bit_depth": 8, "color_space": "sRGB"}, "class_type": "CreateVideo"},
-        "15": {"inputs": {"video": ["14", 0], "filename_prefix": output_prefix, "format": "auto"}, "class_type": "SaveVideo"}
+        "15": {"inputs": {"video": ["14", 0], "filename_prefix": output_prefix, "format": "mp4", "format.codec": "h264", "format.codec.encoding": "auto"}, "class_type": "SaveVideo"}
     }
 
     if first_frame_filename:

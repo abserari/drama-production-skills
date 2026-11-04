@@ -1,0 +1,97 @@
+{
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0240.mp4",
+ "dur": 7.29,
+ "n_frames": 175,
+ "spec": {
+  "n_beats": 3,
+  "tone": {
+   "expect": "cold"
+  },
+  "light": {
+   "hue": "blue",
+   "appear_by_beat": 1,
+   "hold": true,
+   "min_end_frac": 0.004
+  },
+  "motion": {
+   "peak_beats": [
+    1
+   ]
+  },
+  "ending": {
+   "light": "blue",
+   "motion": "still",
+   "min_end_frac": 0.004
+  },
+  "collage": {},
+  "clip": {
+   "must": [
+    {
+     "text": "a giant robot foot stomping the ground making cracks",
+     "beats": [
+      0
+     ]
+    },
+    {
+     "text": "cracked ground with dust",
+     "beats": [
+      1
+     ]
+    },
+    {
+     "text": "a giant rusty mech standing with glowing blue lens band on its head",
+     "beats": [
+      2
+     ]
+    }
+   ],
+   "neg": [
+    "a real human person walking",
+    "a collage of multiple views of one object on a grid"
+   ],
+   "weight": 3
+  }
+ },
+ "items": [
+  {
+   "name": "tone",
+   "hard": false,
+   "ok": false,
+   "detail": "期望cold，实测中位 R-B=+21.3"
+  },
+  {
+   "name": "light_blue",
+   "hard": true,
+   "ok": true,
+   "detail": "尾段均值 0.0982 (阈值 0.004)，出现后峰值 0.2453"
+  },
+  {
+   "name": "motion",
+   "hard": false,
+   "ok": true,
+   "detail": "节拍对齐符合"
+  },
+  {
+   "name": "ending",
+   "hard": false,
+   "ok": true,
+   "detail": "段尾状态符合"
+  },
+  {
+   "name": "clip",
+   "hard": true,
+   "ok": true,
+   "detail": "正例余量 +0.058，neg 占优帧 0/13"
+  }
+ ],
+ "verdict": "WARN",
+ "fails": [],
+ "warns": [
+  "tone: 期望cold，实测中位 R-B=+21.3"
+ ],
+ "clip_detail": {
+  "must_margin": 0.058,
+  "neg_rate": 0.0,
+  "neg_hits": []
+ }
+}

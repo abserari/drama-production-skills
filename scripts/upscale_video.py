@@ -31,7 +31,7 @@ def get_available_upscale_models() -> dict:
     return models
 
 
-def upscale_video(
+def _upscale_video(
     input_path: str,
     output_path: str,
     model_name: str = "RealESRGAN_x2plus.pth",
@@ -97,6 +97,10 @@ def upscale_video(
     temp_video_no_audio = temp_dir / "video_no_audio.mp4"
 
     has_audio = False
+    probe = subprocess.run([shutil.which("ffprobe") or "ffprobe", "-v", "error", "-select_streams", "a", "-show_entries", "stream=codec_type", "-of", "csv=p=0", str(inp)], capture_output=True, text=True)
+    if probe.returncode:
+        raise RuntimeError("Unable to inspect source audio before upscale")
+    source_has_audio = bool(probe.stdout.strip())
     ffmpeg_exe = shutil.which("ffmpeg") or "ffmpeg"
     extract_cmd = [
         ffmpeg_exe, "-y", "-i", str(inp),
@@ -108,13 +112,19 @@ def upscale_video(
         has_audio = True
         print(f"  -> 原生音轨已提取 (大小: {temp_audio.stat().st_size / 1024:.1f} KB)")
     else:
-        print("  -> 原视频无独立音轨或提取静音")
+        if source_has_audio:
+            raise RuntimeError("Source has audio but extraction failed; refusing silent output")
+        print("  -> 原视频没有音轨")
 
     # 4. 初始化视频写入器
     fourcc = cv2.VideoWriter_fourcc(*"mp4v")
     writer = cv2.VideoWriter(str(temp_video_no_audio), fourcc, fps, (final_w, final_h))
 
+    if not writer.isOpened():
+        raise RuntimeError("Unable to open temporary video writer")
+
     # 5. 批处理帧推理
+    processed_frames = 0
     frames_batch = []
     pbar = tqdm(total=total_frames, desc="  超分渲染", unit="frame", ncols=85)
 
@@ -148,6 +158,7 @@ def upscale_video(
         ret, frame = cap.read()
         if not ret:
             break
+        processed_frames += 1
         frames_batch.append(frame)
         if len(frames_batch) >= batch_size:
             process_batch(frames_batch)
@@ -161,6 +172,8 @@ def upscale_video(
     cap.release()
     writer.release()
     pbar.close()
+    if total_frames > 0 and processed_frames != total_frames:
+        raise RuntimeError("Decoded frame count differs from source metadata")
 
     # 6. 使用 ffmpeg 合成音视频 (无损音频混流 + H.264 高质量重编码)
     print("  -> 正在封装高质量 MP4 (保留音轨与色域)...", end="", flush=True)
@@ -171,7 +184,6 @@ def upscale_video(
             "-i", str(temp_audio),
             "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18", "-preset", "fast",
             "-c:a", "copy",
-            "-shortest",
             str(out)
         ]
     else:
@@ -182,10 +194,16 @@ def upscale_video(
             str(out)
         ]
 
+    candidate = out.with_name(out.stem + ".candidate" + out.suffix)
+    merge_cmd[-1] = str(candidate)
     ret = subprocess.run(merge_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if ret.returncode != 0:
-        # 如果 libx264 失败，兜底直接复制
-        shutil.copy2(temp_video_no_audio, out)
+        raise RuntimeError("Final mux failed; refusing to deliver silent fallback: " + ret.stderr.decode("utf-8", errors="replace")[-1200:])
+
+    verify = subprocess.run([ffmpeg_exe, "-v", "error", "-xerror", "-i", str(candidate), "-f", "null", "-"], capture_output=True)
+    if verify.returncode:
+        raise RuntimeError("Upscaled candidate decode failed; old output preserved")
+    os.replace(candidate, out)
 
     # 7. 清理临时缓存
     try:
@@ -194,6 +212,35 @@ def upscale_video(
         pass
 
     print(f" [完成]\n  -> 输出成片已就绪: {out} ({out.stat().st_size / (1024**2):.2f} MB)")
+
+
+def upscale_video(*args, **kwargs):
+    # Same lock as native/CSGlide generation, shared across published copies.
+    import urllib.request
+    import json
+    skill_root = Path(__file__).resolve().parents[1] if Path(__file__).resolve().parent.name == "scripts" else None
+    candidates = [Path(__file__).resolve().parents[1] / "skills/comfy-h3-video-producer/scripts",
+                  Path(__file__).resolve().parents[2] / "comfy-h3-video-producer/scripts"]
+    helper = next((p for p in candidates if (p / "production_state.py").is_file()), None)
+    if helper is None:
+        raise RuntimeError("Shared GPU guard missing; repair skill publication")
+    sys.path.insert(0, str(helper))
+    from production_state import gpu_lock
+    server = os.environ.get("H3_COMFY", "http://127.0.0.1:8188").rstrip("/")
+    with gpu_lock(server):
+        opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
+        try:
+            with opener.open(server + "/queue", timeout=5) as response:
+                queue = json.load(response)
+        except urllib.error.URLError:
+            queue = None  # Offline ComfyUI does not occupy this GPU via its queue.
+        if queue is not None:
+            if queue.get("queue_running") or queue.get("queue_pending"):
+                raise RuntimeError("ComfyUI queue busy; wait before GPU upscale")
+            request = urllib.request.Request(server + "/free", data=b'{"unload_models":true,"free_memory":true}', headers={"Content-Type":"application/json"})
+            with opener.open(request,timeout=15) as response:
+                response.read()
+        return _upscale_video(*args, **kwargs)
 
 
 def main():

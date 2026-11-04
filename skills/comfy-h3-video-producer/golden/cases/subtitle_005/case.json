@@ -1,0 +1,12 @@
+{
+ "check": "subtitle",
+ "expect": "PASS",
+ "was": "WARN",
+ "why": "仪表段恒定文字区交集 WARN（v3.9 收编测试+补第5条字幕容忍）",
+ "tolerant": true,
+ "source": "C:\\Users\\windows\\.workbuddy\\skills\\comfy-h3-video-producer\\golden\\pending\\20261101_113151_seg05_20261101_024831",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0025.mp4",
+ "created": "2026-11-01 11:32:00",
+ "id": "subtitle_005",
+ "inputs": {}
+}

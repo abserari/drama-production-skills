@@ -35,16 +35,14 @@ import urllib.parse
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import paths  # noqa: E402
+from production_state import atomic_json, read_json, file_hash, fingerprint, require_artifact, render_context, require_configured_reviews
 
 PY = sys.executable
 
 
 # ── 台账 ────────────────────────────────────────────────
 def load_progress():
-    try:
-        d = json.load(open(paths.PROGRESS, encoding="utf-8"))
-    except Exception:
-        d = {}
+    d = read_json(paths.PROGRESS, {"segs": {}})
     d.setdefault("segs", {})
     return d
 
@@ -52,7 +50,7 @@ def load_progress():
 def save_progress(d):
     d["updated"] = time.strftime("%Y-%m-%d %H:%M:%S")
     os.makedirs(paths.PROJECT_DIR, exist_ok=True)
-    json.dump(d, open(paths.PROGRESS, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    atomic_json(paths.PROGRESS, d)
 
 
 def load_project():
@@ -61,17 +59,14 @@ def load_project():
     它是"续接能不能成立"的唯一依据：同一任务的所有段必须在同一个 h3_chain/<chain>
     里排成一条 order，续拍档才找得到上一段。片名（name）只用于显示和兜底。
     """
-    try:
-        pj = json.load(open(paths.PROJECT_JSON, encoding="utf-8"))
-    except Exception:
-        pj = {}
+    pj = read_json(paths.PROJECT_JSON)
     pj.setdefault("chain", "")
     return pj
 
 
 def save_project(pj):
     os.makedirs(paths.PROJECT_DIR, exist_ok=True)
-    json.dump(pj, open(paths.PROJECT_JSON, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    atomic_json(paths.PROJECT_JSON, pj)
 
 
 def chain_live(name, timeout=8):
@@ -119,10 +114,30 @@ def seg_of(d, seg, create=False):
 
 
 def load_plan():
-    try:
-        return json.load(open(paths.PLAN, encoding="utf-8"))
-    except Exception:
-        return {"segs": []}
+    return read_json(paths.PLAN)
+
+
+def require_current_inputs(seg, record):
+    """Legacy assets need explicit revalidation, not implicit trust by file size."""
+    snapshot = record.get("input_snapshot")
+    if not snapshot:
+        raise SystemExit("[REFUSE] 缺少输入指纹，旧素材需导入并重新验证")
+    if snapshot.get("segment_spec") != fingerprint(seg_spec(seg)):
+        raise SystemExit("[REFUSE] 分镜计划已修改，旧生成结果失效")
+    if snapshot.get("production_context") != render_context(load_project()):
+        raise SystemExit("[REFUSE] 制作版本或所选技能已改变，请重新验证受影响产物")
+    for path, digest in snapshot.get("files", {}).items():
+        require_artifact(path, digest)
+
+
+def require_review(record):
+    first = record.get("first") or {}
+    review = record.get("visual_review") or {}
+    if first.get("verdict") != "PASS" or review.get("verdict") != "pass":
+        raise SystemExit("[REFUSE] 缺少通过的检查和视觉审查")
+    require_artifact(first.get("video"), first.get("artifact_sha256"))
+    if review.get("artifact_sha256") != first.get("artifact_sha256"):
+        raise SystemExit("[REFUSE] 视觉审查对应旧产物，请重新审查")
 
 
 def seg_spec(seg):
@@ -333,6 +348,7 @@ def run_qc(video, dialogue="auto", fx="auto", tag="adhoc", seg=None, seam=True,
 
     result = {
         "video": video, "verdict": verdict, "reasons": reasons, "warns": warns,
+        "artifact_sha256": file_hash(video),
         "full": bool(full),
         "needs_bed_clean": bool(audio.get("needs_bed_clean")),
         "visual": {"flags": flags, "first_last_sim": visual.get("first_last_sim"),
@@ -356,8 +372,7 @@ def run_qc(video, dialogue="auto", fx="auto", tag="adhoc", seg=None, seam=True,
         "ts": time.strftime("%Y-%m-%d %H:%M:%S"),
     }
     os.makedirs(log_dir, exist_ok=True)
-    json.dump(result, open(os.path.join(log_dir, "qc.json"), "w", encoding="utf-8"),
-              ensure_ascii=False, indent=1)
+    atomic_json(os.path.join(log_dir, "qc.json"), result)
     return result
 
 
@@ -657,7 +672,7 @@ def cmd_gate(a):
     qc = run_qc(video, dialogue, fx, tag=a.seg, seg=a.seg)
     print_qc(qc)
     s["first"] = qc
-    is_ok = (qc["verdict"] == "PASS") or (dialogue == "no")
+    is_ok = qc["verdict"] == "PASS"
     s["status"] = "一采待签" if is_ok else "失败待复核"
     if qc["verdict"] != "PASS":
         s["fail_reason"] = qc["reasons"]
@@ -723,8 +738,13 @@ def cmd_review(a):
     first = s.get("first") or {}
     if first.get("verdict") != "PASS":
         raise SystemExit("[REFUSE] 一采双检还没 PASS，没有可复核的画面。先跑 gate。")
+    require_current_inputs(a.seg, s)
+    require_artifact(first.get("video"), first.get("artifact_sha256"))
     verdict = "pass" if a.pass_ else "fail"
-    s["visual_review"] = {"verdict": verdict, "issues": a.issues or "",
+    review_target = getattr(a, "video", None) or first["video"]
+    review_key = "final_review" if getattr(a, "video", None) else "visual_review"
+    s[review_key] = {"verdict": verdict, "issues": a.issues or "",
+                          "artifact_sha256": file_hash(review_target), "evidence": getattr(a, "evidence", None) or [], "reviewer_type": "agent",
                           "by": a.by, "ts": time.strftime("%Y-%m-%d %H:%M:%S")}
     if verdict == "pass":
         s["status"] = "一采通过"
@@ -783,6 +803,9 @@ def cmd_finish(a):
     s = seg_of(d, a.seg)
     if not s:
         raise SystemExit(f"[REFUSE] 台账里没有 {a.seg}")
+    require_current_inputs(a.seg, s)
+    require_review(s)
+    require_configured_reviews(paths.PROJECT_DIR, load_plan(), a.seg)
     if (s.get("first") or {}).get("verdict") != "PASS":
         raise SystemExit(f"[REFUSE] {a.seg} 没有一采双检 PASS 记录 —— 这就是 SOP 闸门，"
                          "先 h3proj.py gate 再谈收片。")
@@ -796,7 +819,15 @@ def cmd_finish(a):
     if not final or not os.path.isfile(final):
         raise SystemExit("[FATAL] 找不到终片文件。先 sop_run.py final --seg " + a.seg + " 或显式 --final")
 
+    final_hash = file_hash(final)
+    first_hash = (s.get("first") or {}).get("artifact_sha256")
+    if final_hash != first_hash:
+        final_review = s.get("final_review") or {}
+        if final_review.get("verdict") != "pass" or final_review.get("artifact_sha256") != final_hash:
+            raise SystemExit("[REFUSE] 所选终片与已审视频不同，必须对本版终片单独审查并记录 final_review")
     st = stream_summary(final)
+    if not st.get("has_video") or st.get("duration", 0) <= 0:
+        raise SystemExit("[REFUSE] 终片没有有效视频流")
     audio_from = a.audio_from
     if not st["has_audio"] and not a.audio_silent:
         audio_from = audio_from or (s.get("files") or {}).get("audio_src")
@@ -868,7 +899,7 @@ def cmd_finish(a):
             tail_eval = ((first_qc.get("visual") or {}).get("sequence") or {}).get("tail_motion_eval") or {}
             tail_ratio = tail_eval.get("ratio", 0.0)
             is_dynamic_tail = getattr(a, "keep_tail_audio", False) or (tail_ratio >= 0.35)
-            
+
             if is_dynamic_tail:
                 print(f"     [note] 画面结尾人物为动态（尾拍能量比 {tail_ratio:.2f}），不用清除尾音，保留自然尾音延展")
             else:
@@ -905,7 +936,7 @@ def cmd_finish(a):
     _audio_kw = ("音频不达标", "该文件没有音轨")
     vis_fails = [x for x in qc2["reasons"] if not x.startswith(_audio_kw)]
     audio_fails = [x for x in qc2["reasons"] if x.startswith(_audio_kw)]
-    if vis_fails:
+    if qc2["verdict"] != "PASS":
         print(f"[!] 交付片视觉复检未通过：新片保留在 {tmp}，未覆盖旧交付"
               f"（人工确认：好的话把它改名为 {os.path.basename(out)}，差则重抽）")
         sys.exit(1)
@@ -915,6 +946,8 @@ def cmd_finish(a):
     #    音频侧后期只做接缝淡化+低电平铺床+loudnorm，所以「音频不达标/没有音轨」
     #    降级为建议，不再把段打成"失败待复核"卡死 concat。
     s["deliver"] = {"path": out, "bed_db": (qc2["audio"] or {}).get("bed_db"),
+                    "artifact_sha256": file_hash(out),
+                    "input_fingerprint": s.get("input_fingerprint"),
                     "verdict": qc2["verdict"], "ts": time.strftime("%Y-%m-%d %H:%M:%S"),
                     "size_mb": round(os.path.getsize(out) / 1048576, 2)}
     s["status"] = "完成"
@@ -971,14 +1004,22 @@ def cmd_concat(a):
         if rest:
             print(f"[REFUSE] 还有 {len(rest)} 段没完成: {rest} —— 全片拼接拒绝半成品")
             sys.exit(1)
+    if not order or len(order) != len(set(order)) or set(order) != set(plan_order()):
+        raise SystemExit("[REFUSE] 拼接清单必须完整且不重复覆盖计划分镜")
     files, sizes = [], []
     chains = set()
     for seg in order:
         rec = d["segs"].get(seg) or {}
+        require_current_inputs(seg, rec)
+        require_review(rec)
+        delivery = rec.get("deliver") or {}
+        if delivery.get("verdict") != "PASS" or delivery.get("input_fingerprint") != rec.get("input_fingerprint"):
+            raise SystemExit("[REFUSE] 缺少有效交付检查或输入版本已改变")
         p = (rec.get("deliver") or {}).get("path")
         if not p or not os.path.isfile(p):
             print(f"[REFUSE] {seg} 没有交付片")
             sys.exit(1)
+        require_artifact(p, delivery.get("artifact_sha256"))
         cname = ((rec.get("chain") or {}).get("name") or "").strip()
         if cname:
             chains.add(cname)
@@ -991,6 +1032,9 @@ def cmd_concat(a):
         sys.exit(1)
     print(f"{len(files)} 段, 分辨率 {set(sizes)}" + (f", 工程 {chains.pop()}" if chains else ""))
     out = a.out or os.path.join(paths.PROJECT_DIR, "全片.mp4")
+    if any(os.path.normcase(os.path.realpath(out)) == os.path.normcase(os.path.realpath(p)) for p in files):
+        raise SystemExit("[REFUSE] 拼接输出不能覆盖输入分镜")
+    require_configured_reviews(paths.PROJECT_DIR, load_plan(), "concat")
     xf = getattr(a, "audio_crossfade", 0.0) or 0.0
     fps = 24.0  # H3 全链固定 24fps，裁帧↔时间换算用
     # ── 续接钉帧裁头：钉帧数是 submit 时写死的生成参数（latent 注入 cont.frames 帧），
@@ -1068,11 +1112,25 @@ def cmd_concat(a):
         cmd += ["-filter_complex", fc, "-map", "[v]", "-map", "[a]",
                 "-c:v", "libx264", "-crf", "14", "-preset", "medium",
                 "-c:a", "aac", "-b:a", "192k", "-ar", "48000", out]
+    candidate = out + ".candidate.mp4"
+    cmd[-1] = candidate
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     if r.returncode != 0:
         print(r.stderr[-2000:])
-        raise SystemExit("[FATAL] 拼接失败")
-    print(f"[OK] 全片: {out}")
+        raise SystemExit("[FATAL] 拼接失败；上一版成片未覆盖")
+    summary = stream_summary(candidate)
+    if not summary.get("has_video") or summary.get("duration", 0) <= 0:
+        raise SystemExit("[REFUSE] 拼接候选没有有效视频流；上一版成片未覆盖")
+    decode = subprocess.run([paths.FFMPEG, "-v", "error", "-xerror", "-i", candidate,
+                             "-f", "null", "-"], capture_output=True)
+    expected = sum(float(stream_summary(p).get("duration", 0)) - trims[i] / fps for i,p in enumerate(files))
+    if decode.returncode or abs(summary["duration"] - expected) > max(0.25, len(files) * 0.05):
+        raise SystemExit("[REFUSE] 拼接候选解码或总时长异常；上一版成片未覆盖")
+    os.replace(candidate, out)
+    d["concat"] = {"path": out, "sha256": file_hash(out), "status": "needs_review",
+                   "sources": {seg: d["segs"][seg]["deliver"]["artifact_sha256"] for seg in order}}
+    save_progress(d)
+    print(f"[OK] 拼接产物待全片审查: {out}")
     # 音频接缝咔嗒检测（记录不判定）：段边界 ±60ms 内的尖峰 = 接缝爆音，
     # 其余位置的孤立尖峰也报出来（可能是拟音贴边被切）。WARN 级，人工确认后
     # 可用 --audio-crossfade 0.15 重拼或剪辑兜底。
@@ -1278,7 +1336,9 @@ if __name__ == "__main__":
     rv = sub.add_parser("review")
     rv.add_argument("--seg", required=True); rv.add_argument("--pass", dest="pass_", action="store_true")
     rv.add_argument("--fail", dest="pass_", action="store_false"); rv.set_defaults(pass_=None)
-    rv.add_argument("--issues"); rv.add_argument("--by", default="workbuddy")
+    rv.add_argument("--issues"); rv.add_argument("--by", default="agent")
+    rv.add_argument("--video", help="Review this exact final candidate rather than the first render")
+    rv.add_argument("--evidence", action="append", help="Observed frame/contact sheet/report path")
     rv.add_argument("--golden", default="",
                     help="签字的同时把本次双检现场固化成金样本（v3.9 校准闭环）。"
                          "值为判例理由，如 --golden '黄条纹被误判为水印，人工放行'。"

@@ -1,0 +1,64 @@
+{
+ "check": "semantic",
+ "expect": "WARN",
+ "was": "PASS",
+ "why": "已知瑕疵放行：裂缝橙光偏岩浆感拖高R-B（tone软项X），其余判项达标。锁定『软项瑕疵→WARN不FAIL』的分级行为",
+ "tolerant": false,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-10-31-00-01-47\\钢铁轰鸣\\生产\\checks\\seg04_20261101_122344",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0240.mp4",
+ "created": "2026-11-01 13:11:59",
+ "id": "semantic_003",
+ "inputs": {
+  "spec": {
+   "n_beats": 3,
+   "tone": {
+    "expect": "cold"
+   },
+   "light": {
+    "hue": "blue",
+    "appear_by_beat": 1,
+    "hold": true,
+    "min_end_frac": 0.004
+   },
+   "motion": {
+    "peak_beats": [
+     1
+    ]
+   },
+   "ending": {
+    "light": "blue",
+    "motion": "still",
+    "min_end_frac": 0.004
+   },
+   "collage": {},
+   "clip": {
+    "must": [
+     {
+      "text": "a giant robot foot stomping the ground making cracks",
+      "beats": [
+       0
+      ]
+     },
+     {
+      "text": "cracked ground with dust",
+      "beats": [
+       1
+      ]
+     },
+     {
+      "text": "a giant rusty mech standing with glowing blue lens band on its head",
+      "beats": [
+       2
+      ]
+     }
+    ],
+    "neg": [
+     "a real human person walking",
+     "a collage of multiple views of one object on a grid"
+    ],
+    "weight": 3
+   }
+  },
+  "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0240.mp4"
+ }
+}

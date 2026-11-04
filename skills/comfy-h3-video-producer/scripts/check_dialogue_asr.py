@@ -17,8 +17,7 @@ import argparse
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-TTS_PY = os.path.join(os.environ.get("H3_TTS_HOME", "D:/H3AudioProd"),
-                      ".venv", "Scripts", "python.exe")
+TTS_PY = os.environ.get("H3_ASR_PY") or (os.path.join(os.environ["H3_TTS_HOME"], ".venv", "Scripts", "python.exe") if os.environ.get("H3_TTS_HOME") else sys.executable)
 FFMPEG = os.environ.get("H3_FFMPEG") or "ffmpeg"
 PASS_MIN, WARN_MIN = 0.65, 0.40
 
@@ -47,12 +46,15 @@ def transcribe_segments(wav, events, language, dialogues):
     """venv python + whisper 转写每个语声事件，返回 [text, ...]。
     whisper 导入重，放子进程跑，主进程保持轻快。
     language 由 <d> 原文推导（auto 对短喊叫会误判）；原文作 initial_prompt 引导。"""
+    model_path = os.environ.get("H3_WHISPER_MODEL") or os.path.expanduser("~/.cache/whisper/small.pt")
+    if not os.path.isfile(model_path):
+        raise RuntimeError("ASR model unavailable; set H3_WHISPER_MODEL to a local model file. No automatic download.")
     code = r'''
 import sys, json
 import whisper
 wav, events_json, language, prompt = sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4]
 events = json.loads(events_json)
-model = whisper.load_model("small")
+model = whisper.load_model(sys.argv[5], device="cpu")
 kw = {"fp16": False}
 if language and language != "auto":
     kw["language"] = language
@@ -70,7 +72,7 @@ print(json.dumps(out, ensure_ascii=False))
     env = dict(os.environ)
     env["PATH"] = os.path.dirname(FFMPEG) + os.pathsep + env.get("PATH", "")  # whisper.load_audio 要调 ffmpeg
     r = subprocess.run([TTS_PY, "-c", code, wav, json.dumps(events), language or "auto",
-                        "、".join(dialogues)],
+                        "、".join(dialogues), model_path],
                        capture_output=True, text=True, encoding="utf-8", errors="replace",
                        timeout=600, env=env)
     if r.returncode != 0:
@@ -135,7 +137,8 @@ def main():
         print(f"        ASR : {(asr_texts[bi] if bi >= 0 else '(未匹配)')[:40]}")
     n_fail, n_warn = verdicts.count("FAIL"), verdicts.count("WARN")
     print(f"[asr] 总判定: {'FAIL 需重抽/换 seed' if n_fail else ('WARN 请人耳复核' if n_warn else 'PASS')}")
+    return 1 if n_fail else (2 if n_warn else 0)
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
