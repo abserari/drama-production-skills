@@ -1,0 +1,21 @@
+{
+  "schema_version": "drama.project.v1",
+  "project_id": "demo-text",
+  "goal": "完成一场短剧剧本及内容审查",
+  "production": {
+    "route": "text_only",
+    "language": "zh",
+    "review_policy": {
+      "version": "review-v1",
+      "sample_rate": 0.2,
+      "initial_human_tone": true
+    },
+    "retry_limits": {
+      "transient_retries": 2,
+      "quality_rounds": 2
+    }
+  },
+  "selected_skills": {},
+  "render_settings": {},
+  "mixing": {}
+}

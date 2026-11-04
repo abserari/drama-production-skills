@@ -1,0 +1,66 @@
+{
+ "check": "semantic",
+ "expect": "PASS",
+ "was": "PASS",
+ "why": "好样本：冷蓝暮色+蓝核点亮+碎屑悬浮达标take，语义判卷应全绿",
+ "tolerant": false,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-10-31-00-01-47\\钢铁轰鸣\\生产\\checks\\seg01_20261101_115234",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0237.mp4",
+ "created": "2026-11-01 13:11:30",
+ "id": "semantic_002",
+ "inputs": {
+  "spec": {
+   "n_beats": 3,
+   "tone": {
+    "expect": "cold",
+    "weight": 2
+   },
+   "light": {
+    "hue": "blue",
+    "appear_by_beat": 2,
+    "hold": true,
+    "min_end_frac": 0.004,
+    "weight": 3
+   },
+   "ending": {
+    "light": "blue",
+    "min_end_frac": 0.004,
+    "weight": 2
+   },
+   "collage": {
+    "weight": 3
+   },
+   "clip": {
+    "must": [
+     {
+      "text": "a rusty yellow robot lying broken under rubble in a ruined street",
+      "beats": [
+       0
+      ]
+     },
+     {
+      "text": "a glowing blue energy core on a broken robot",
+      "beats": [
+       1,
+       2
+      ]
+     },
+     {
+      "text": "metal debris floating in the air around a robot",
+      "beats": [
+       2
+      ]
+     }
+    ],
+    "neg": [
+     "a real human person walking",
+     "a face of a person",
+     "a collage of multiple views of one object on a grid",
+     "movie subtitles text at the bottom of the screen"
+    ],
+    "weight": 3
+   }
+  },
+  "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0237.mp4"
+ }
+}

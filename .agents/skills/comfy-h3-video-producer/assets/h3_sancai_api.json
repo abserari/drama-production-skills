@@ -1,0 +1,572 @@
+{
+ "250": {
+  "class_type": "BanZhang_IgnoreGroups",
+  "inputs": {},
+  "_meta": {
+   "title": "BanZhang_IgnoreGroups"
+  }
+ },
+ "251": {
+  "class_type": "VAELoader",
+  "inputs": {
+   "vae_name": "minimax_h3_audio_vae_fp32.safetensors"
+  },
+  "_meta": {
+   "title": "音频VAE"
+  }
+ },
+ "252": {
+  "class_type": "VAELoader",
+  "inputs": {
+   "vae_name": "minimax_h3_video_vae_int8_convrot.safetensors"
+  },
+  "_meta": {
+   "title": "视频VAE"
+  }
+ },
+ "253": {
+  "class_type": "ModelAttentionBackend",
+  "inputs": {
+   "attention": "comfy kitchen attention",
+   "model": [
+    "264",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "ModelAttentionBackend"
+  }
+ },
+ "254": {
+  "class_type": "MiniMaxH3SigmaShift",
+  "inputs": {
+   "shift_video": 12,
+   "shift_audio": 3,
+   "model": [
+    "253",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "MiniMaxH3SigmaShift"
+  }
+ },
+ "255": {
+  "class_type": "BanzhangVisualLoader",
+  "inputs": {
+   "📂 文件夹路径": "K:\\ComfyUI_windows_portable\\ComfyUI\\input",
+   "📄 指定文件": "武士.jpg",
+   "🔃 排序方式": "时间:最新优先",
+   "🔍 缩略图尺寸": 170,
+   "📁 含子目录": true
+  },
+  "_meta": {
+   "title": "BanzhangVisualLoader"
+  }
+ },
+ "256": {
+  "class_type": "CLIPLoader",
+  "inputs": {
+   "clip_name": "qwen3vl_32b_minimax_h3-w4a8_convrot.safetensors",
+   "type": "minimax",
+   "device": "default"
+  },
+  "_meta": {
+   "title": "CLIPLoader"
+  }
+ },
+ "257": {
+  "class_type": "CSGlideH3MediaRackCS",
+  "inputs": {
+   "rack_data": "{\"slots\":{\"images\":[],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0,\"segs\":{\"clip_0001\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"34n8fhu\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"clip_0002\":{\"slots\":{\"images\":[],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"rkpsqff\":{\"slots\":{\"images\":[{\"file\":\"班长作品_N511_0039.png\",\"alias\":[\"班长作品_N511_0039\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"kv1tv8s\":{\"slots\":{\"images\":[{\"file\":\"班长作品_N511_0039.png\",\"alias\":[\"班长作品_N511_0039\"]},{\"file\":\"sacvscsa (2).png\",\"alias\":[\"sacvscsa (2)\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"cp9jfsq\":{\"slots\":{\"images\":[{\"file\":\"班长作品_N511_0039.png\",\"alias\":[\"班长作品_N511_0039\"]},{\"file\":\"sacvscsa (2).png\",\"alias\":[\"sacvscsa (2)\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"mvp8ln1\":{\"slots\":{\"images\":[{\"file\":\"班长作品_N511_0039.png\",\"alias\":[\"班长作品_N511_0039\"]},{\"file\":\"sacvscsa (2).png\",\"alias\":[\"sacvscsa (2)\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"8lewin9\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"u4b1hgg\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"8zfdy0q\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"pmseofm\":{\"slots\":{\"images\":[],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"clip_0005\":{\"slots\":{\"images\":[{\"file\":\"班长作品_N511_0039.png\",\"alias\":[\"班长作品_N511_0039\"]},{\"file\":\"sacvscsa (2).png\",\"alias\":[\"sacvscsa (2)\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"mgsixqd\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"clip_0009\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"clip_0003\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0},\"clip_0010\":{\"slots\":{\"images\":[{\"file\":\"cglide/色板.png\",\"alias\":[\"色板\"]},{\"file\":\"cglide/c01.png\",\"alias\":[\"c01\"]},{\"file\":\"cglide/陈九一.png\",\"alias\":[\"陈九一\"]},{\"file\":\"cglide/c02.png\",\"alias\":[\"c02\"]},{\"file\":\"cglide/c03.png\",\"alias\":[\"c03\"]},{\"file\":\"cglide/c04.png\",\"alias\":[\"c04\"]},{\"file\":\"cglide/守缺斋后堂.png\",\"alias\":[\"守缺斋后堂\"]},{\"file\":\"cglide/人鱼膏灯.png\",\"alias\":[\"人鱼膏灯\"]},{\"file\":\"cglide/半枚铜楔.png\",\"alias\":[\"半枚铜楔\"]},{\"file\":\"cglide/陈墨白.png\",\"alias\":[\"陈墨白\"]},{\"file\":\"cglide/粗陶香插.png\",\"alias\":[\"粗陶香插\"]},{\"file\":\"cglide/靛蓝门帘.png\",\"alias\":[\"靛蓝门帘\"]},{\"file\":\"cglide/帆布包.png\",\"alias\":[\"帆布包\"]},{\"file\":\"cglide/九寸铜镜.png\",\"alias\":[\"九寸铜镜\"]},{\"file\":\"cglide/旧报纸.png\",\"alias\":[\"旧报纸\"]},{\"file\":\"cglide/老魅.png\",\"alias\":[\"老魅\"]},{\"file\":\"cglide/马魁.png\",\"alias\":[\"马魁\"]},{\"file\":\"cglide/蒙俑红布.png\",\"alias\":[\"蒙俑红布\"]},{\"file\":\"cglide/前堂油灯.png\",\"alias\":[\"前堂油灯\"]},{\"file\":\"cglide/穷奇陶片.png\",\"alias\":[\"穷奇陶片\"]},{\"file\":\"cglide/穷奇俑.png\",\"alias\":[\"穷奇俑\"]},{\"file\":\"cglide/软布.png\",\"alias\":[\"软布\"]},{\"file\":\"cglide/升山符.png\",\"alias\":[\"升山符\"]},{\"file\":\"cglide/守缺斋前堂.png\",\"alias\":[\"守缺斋前堂\"]},{\"file\":\"cglide/杌凳.png\",\"alias\":[\"杌凳\"]},{\"file\":\"cglide/星点拓片.png\",\"alias\":[\"星点拓片\"]},{\"file\":\"cglide/朱砂碗.png\",\"alias\":[\"朱砂碗\"]},{},{},{},{\"file\":\"cglide/陈九一的影子.png\",\"alias\":[\"陈九一的影子\"]}],\"videos\":[],\"audios\":[]},\"fps\":0,\"audio_out\":0}},\"cur\":\"clip_0002\"}"
+  },
+  "_meta": {
+   "title": "CSGlideH3MediaRackCS"
+  }
+ },
+ "258": {
+  "class_type": "UNETLoader",
+  "inputs": {
+   "unet_name": "MiniMax-H3\\minimax_h3_hybrid_fl2va_ref2va_b25-49.safetensors",
+   "weight_dtype": "default"
+  },
+  "_meta": {
+   "title": "UNETLoader"
+  }
+ },
+ "261": {
+  "class_type": "CSGlideCastCS",
+  "inputs": {
+   "h3_data": "{\"mode\":\"ref2va\",\"width\":576,\"height\":320,\"ratio\":\"16:9\",\"length\":243,\"redo_mode\":\"完整重拍\",\"redo_anchor\":\"等间隔\",\"pin_head\":0,\"pin_tail\":0,\"ref_image_size\":\"match\",\"ref_video_size\":768,\"ref_video_fps\":24,\"ref_scale_hd\":1.25,\"bridge_adapter\":\"\",\"bridge_alpha\":0,\"bridge_mode\":\"full\",\"pace\":2.5,\"prompt\":\"\",\"slots\":{\"first\":{},\"last\":{},\"images\":[{},{},{},{},{},{},{},{},{}],\"videos\":[{},{},{}],\"audios\":[{},{},{}]},\"cont\":{\"mode\":\"latent\",\"frames\":39},\"push_whole\":false,\"chain\":{\"name\":\"未命名工程 16\",\"clip\":\"clip_0002\",\"shot\":\"8lewin9\"}}",
+   "clip": [
+    "256",
+    0
+   ],
+   "vae": [
+    "252",
+    0
+   ],
+   "audio_vae": [
+    "251",
+    0
+   ],
+   "refs": [
+    "265",
+    0
+   ],
+   "prompt_text": [
+    "265",
+    1
+   ]
+  },
+  "_meta": {
+   "title": "CSGlideCastCS"
+  }
+ },
+ "262": {
+  "class_type": "BanZhang_LoRA_VramSafe",
+  "inputs": {
+   "LoRA配置": "[{\"on\":true,\"file\":\"MiniMax-H3/4步电影高清化-v11.safetensors\",\"strength\":1,\"note\":\"\"}]",
+   "模型强度": "",
+   "模型": [
+    "254",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "BanZhang_LoRA_VramSafe"
+  }
+ },
+ "264": {
+  "class_type": "BanZhang_VRAM_Guard",
+  "inputs": {
+   "预留容量_GB": 0.8,
+   "🔣 任意输入": [
+    "258",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "BanZhang_VRAM_Guard"
+  }
+ },
+ "265": {
+  "class_type": "CSGlideDeskCS",
+  "inputs": {
+   "desk_data": "{\"chain\":{\"name\":\"未命名工程 16\",\"clip\":\"clip_0002\",\"shot\":\"8lewin9\"},\"global\":\"\",\"segs\":{\"clip_0011\":\"才发现小程序地方\",\"clip_0003\":\"\",\"clip_0002\":\"才发现小程序地方\",\"clip_0001\":\"subject_definitions:\\n- 色彩参考色板：为全片色彩调性参考，来自 @图片1（电影级色彩参考色板，核心色彩比例和氛围依据）；权限=仅约束色彩比例与氛围，不干预画面内容元素。\\n- @图片24 为本视频的关键帧参考图，用作视频模型的视觉基准与分镜锚点；权限=锚定构图、景别与空间关系，不限定后续动作时序。\\n- <Subject 1> 为 @图片3 中的陈九一，尺度锚点=总高度 1.72 米、总宽度（肩宽）0.46 米；权限=锁定外形/服装/配饰，不限定姿势、表情与背景。\\n- <Subject 2> 为 @图片7 中的守缺斋后堂，尺度锚点=堂屋为近距离可听清低语的窄进深，南门门槛至蒲团约十步，佛龛齐成年男子胸口以上，条案齐腰高；权限=锁定空间结构、材质与色调，不复制原图构图与机位。\\n- <Subject 3> 为 @图片31 中的陈九一的影子，尺度锚点=立姿投影全长 1.70 米、肩部投影宽 0.46 米；权限=锁定剪影形态与轮廓边缘锐度，不限定动作相位。\\n- <Subject 4> 为 @图片8 中的人鱼膏灯，尺度锚点=通高 0.42 米、灯盘口径 0.18 米；权限=锁定造型、铜锈质感与灯焰色，不限定灯焰高度与亮度。\\n- <Audio 1> 为 二十二岁东亚人男性青年音质，清晰带关中腔，语速中等偏慢，弱声气声 (S1) 的音色参考。\\n\\nsummary:\\n[参考生成 + 音频参考] 目标视频呈现陈墨白推开守缺斋后堂门的那一刻：堂内陈九一端坐不动，他的影子却独自向人鱼膏灯俯拜叩首。以 <Subject 2> 场景承载 <Subject 1> 与 <Subject 3> 的\\\"人不动而影子自拜\\\"这一核心反转；<Audio 1> 用作陈墨白 (S1) 的画外音色参考；全程无背景音乐。\\n\\ndetailed_description:\\n低照度暖褐基底上的冷蓝渗透，烛光暖褐的层次与冷色单光源的克制并存，胶片颗粒结构覆盖全片，暖主光与冷补光的对撞关系全场恒定。\\n时间光线：庚申夜丑时，堂内无自然光；唯一光源为 <Subject 4> 一芯幽蓝冷焰，自龛前一尺的灯盘向上投出，照度只铺到蒲团周围数步，堂屋四角吞在漆黑里。\\n时间位置：全片时间起点（冷开场闪前），正片回到当日黄昏。\\n空间环境：<Subject 2>；南端厚木门通往前堂，门槛可绊脚；北墙正中一座落地木佛龛，龛内上层台留空；龛前青砖地中央置一方旧蒲团；东墙下榆木条案贴墙落地；西墙装木栅小窗；地面铺青方砖，砖面浮一层薄湿气。\\n方位参照：南侧=通前堂厚木门；北侧=落地木佛龛；东侧=贴墙榆木条案；西侧=装木栅的小窗；中心参照物=旧蒲团，置于龛前青砖地中央，距南门约十步；基准机位自南侧厚木门朝北拍摄，主轴线为南北向。\\n规模锚点：一名死者（<Subject 1>）、一道影子（<Subject 3>）、一盏灯（<Subject 4>）。\\n环境次级运动：灯焰尖端持续晃动，灯壁水珠缓慢下滑，青砖缝里的湿气缓慢向外扩大。\\n[节拍 1] 镜头：远景，机位在南侧厚木门外齐肩高度，随厚木门向内推开缓慢前推，越过门槛停在堂内朝北。画面：厚木门自南向内推开一道缝，门轴转动，一道幽蓝冷光自门缝落入门内青砖地，光带随门扇角度向南拉长后停住，堂内北侧的落地木佛龛与旧蒲团轮廓自黑暗里浮出，蒲团上方的暗影比四周更深一层。神态：<Subject 1> 背对镜头端坐旧蒲团，肩背纹丝不动，眼睑半阖、嘴唇闭合。环境：冷光在门槛内侧青砖上铺出一条直边，砖面薄湿气在冷光里显出一层白，堂屋南墙仍留在漆黑中。音效：<木门轴长吟声>。<Audio 1> (S1) 画外说（气沉在腹底、不送气出声｜匀速说完，重音落在\\\"死\\\"，尾音下沉）：<d>我爷爷死的那天夜里</d>\\n[节拍 2] 镜头：中景，自上一节拍落幅机位沿青砖地低角度前移至旧蒲团右后方，景别收至 <Subject 1> 背影与砖地上的投影。画面：<Subject 3> 先自俯身相位直起、肩背抬平，再向前俯落，额头触到青方砖后停住一息；<Subject 1> 肩背与头颈全程不动；<Subject 4> 的蓝焰在 <Subject 3> 边缘勾出一道锐利轮廓，<Subject 3> 的轮廓边缘不随灯焰晃动。神态：<Subject 1> 眼睑半阖、嘴唇闭合不动，肩背无起伏。环境：<Subject 3> 额头触地的砖面上薄湿气向外扩开一圈，灯焰随之跳一下，砖缝里的湿气自门口一侧连到灯座下。音效：<额头触砖的闷响>。特殊要求：动作只发生在 <Subject 3> 上，<Subject 1> 肩背与头颈全程不动。\\n[节拍 3] 镜头：中景，自上一节拍落幅机位缓慢后撤至旧蒲团侧后方，景别放宽至 <Subject 1> 背影与北侧落地木佛龛下段。画面：<Subject 3> 自额头触地相位直起、肩背再次抬平，停在半途一息，保持直起的静止姿态；<Subject 4> 灯壁一粒水珠滑落至灯座，蓝焰高度不变。神态：<Subject 1> 眼睑半阖、嘴唇闭合不动。环境：<Subject 3> 停住处的砖面薄湿气停止外扩，堂内安静，灯焰不再晃动。音效：<水珠落上灯座的细响>。<Audio 1> (S1) 画外说（开口前喉结滚动一次｜前半句慢，重音落在\\\"丑时三刻\\\"，尾音气声拉长）：<d>丑时三刻，我推开了后堂那扇门。</d>\\n[结尾状态] 中景停在 <Subject 1> 右后方；<Subject 1> 端坐旧蒲团纹丝不动，<Subject 3> 保持直起姿态平贴青方砖地；<Subject 4> 落在龛前一尺的青砖地上，无持主。\\n\\noverall_soundscape:\\n堂内无持续环境声。贯穿本段的物理音效：木门轴长吟声、额头触砖的闷响、水珠落上灯座的细响。\\n\\nnon_diegetic_music:\\n禁BGM/字幕/水印/UI/Logo\\n\",\"clip_0009\":\"\",\"clip_0010\":\"\"},\"alias\":false,\"presets\":[\"镜头缓慢推进，主体保持在画面中央\",\"固定机位，人物从画面左侧入画\"]}",
+   "片名": "",
+   "段落": "",
+   "参考素材": [
+    "257",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "CSGlideDeskCS"
+  }
+ },
+ "270": {
+  "class_type": "ConditioningZeroOut",
+  "inputs": {
+   "conditioning": [
+    "261",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "ConditioningZeroOut"
+  }
+ },
+ "271": {
+  "class_type": "MiniMaxH3PreviewOverride",
+  "inputs": {
+   "max_resolution": 960,
+   "jpeg_quality": 80,
+   "suppress_default_preview": false,
+   "preview_frames": 60,
+   "preview_fps": 4,
+   "vae_name": "MiniMax-H3-TAE.safetensors",
+   "audio_preview": true,
+   "audio_preview_from": 60,
+   "model": [
+    "262",
+    0
+   ],
+   "audio_vae": [
+    "251",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "MiniMaxH3PreviewOverride"
+  }
+ },
+ "273": {
+  "class_type": "BanZhang_SLABlockSparseAttention",
+  "inputs": {
+   "省多少计算": 95,
+   "开头几步不省": 0,
+   "最后几步精修": 0,
+   "保住声音": true,
+   "参考声音保多少": 0,
+   "计算块大小": "64",
+   "模型": [
+    "262",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "BanZhang_SLABlockSparseAttention"
+  }
+ },
+ "275": {
+  "class_type": "VAEDecode",
+  "inputs": {
+   "samples": [
+    "313",
+    0
+   ],
+   "vae": [
+    "252",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "VAEDecode"
+  }
+ },
+ "276": {
+  "class_type": "VAEDecodeAudio",
+  "inputs": {
+   "samples": [
+    "313",
+    0
+   ],
+   "vae": [
+    "251",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "VAEDecodeAudio"
+  }
+ },
+ "277": {
+  "class_type": "KSampler",
+  "inputs": {
+   "seed": 9,
+   "steps": 4,
+   "cfg": 1,
+   "sampler_name": "euler",
+   "scheduler": "beta",
+   "denoise": 1,
+   "model": [
+    "271",
+    0
+   ],
+   "positive": [
+    "261",
+    0
+   ],
+   "negative": [
+    "270",
+    0
+   ],
+   "latent_image": [
+    "261",
+    2
+   ]
+  },
+  "_meta": {
+   "title": "KSampler"
+  }
+ },
+ "280": {
+  "class_type": "banzhangVideoCombine",
+  "inputs": {
+   "⏱️ 帧率": 24,
+   "📼 视频格式": "MP4 (H264/通用)",
+   "🏷️ 文件前缀": "一采",
+   "💾 保存元数据": true,
+   "🔀 输出模式": "自动",
+   "📂 自定义保存路径": "",
+   "🖼️ 图像": [
+    "275",
+    0
+   ],
+   "🎵 音频": [
+    "276",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "banzhangVideoCombine"
+  }
+ },
+ "281": {
+  "class_type": "BanZhang_VRAM_Cleaner",
+  "inputs": {
+   "提示音_播放开关": true,
+   "提示音_文件": "一采.mp3",
+   "提示音_音量": 1,
+   "显存_卸载模型": true,
+   "显存_清理缓存": true,
+   "内存_清理文件缓存": true,
+   "内存_清理进程内存": true,
+   "内存_清理DLL": true,
+   "重试次数": 4,
+   "模型_彻底丢弃": false,
+   "信号触发入口": [
+    "280",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "BanZhang_VRAM_Cleaner"
+  }
+ },
+ "282": {
+  "class_type": "ManualSigmas",
+  "inputs": {
+   "sigmas": "0.536,0.298,0.000"
+  },
+  "_meta": {
+   "title": "自定义Sigmas，3步"
+  }
+ },
+ "283": {
+  "class_type": "BanZhang_MMH3_UpscaleParams",
+  "inputs": {
+   "放大模型": "minimax_h3_latent_upscaler_3d_bf16.safetensors",
+   "放大模式": "按倍数",
+   "放大倍数": 1.5,
+   "目标宽度": 1280,
+   "目标高度": 704,
+   "兆像素": 1,
+   "显存预设": "12 GB",
+   "预显影步数": 1,
+   "预显影强度": 0.3,
+   "每块帧数": 73,
+   "重叠帧数": 22,
+   "放大时间分块": "32"
+  },
+  "_meta": {
+   "title": "BanZhang_MMH3_UpscaleParams"
+  }
+ },
+ "284": {
+  "class_type": "BanZhang_MMH3_Upscale",
+  "inputs": {
+   "lora_file": "🚫 关闭",
+   "lora_strength": 1,
+   "随机种子": 0,
+   "采样器": "euler",
+   "调度器": "simple",
+   "步数": 1,
+   "去噪强度": 0.2,
+   "音频重绘强度": 0.3,
+   "模型": [
+    "273",
+    0
+   ],
+   "条件": [
+    "261",
+    1
+   ],
+   "潜空间": [
+    "313",
+    0
+   ],
+   "sigmas": [
+    "282",
+    0
+   ],
+   "放大参数": [
+    "283",
+    0
+   ],
+   "时间分块参数": [
+    "283",
+    2
+   ]
+  },
+  "_meta": {
+   "title": "BanZhang_MMH3_Upscale"
+  }
+ },
+ "285": {
+  "class_type": "VAEDecode",
+  "inputs": {
+   "samples": [
+    "284",
+    0
+   ],
+   "vae": [
+    "252",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "VAEDecode"
+  }
+ },
+ "286": {
+  "class_type": "VAEDecodeAudio",
+  "inputs": {
+   "samples": [
+    "284",
+    0
+   ],
+   "vae": [
+    "251",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "VAEDecodeAudio"
+  }
+ },
+ "289": {
+  "class_type": "BanZhang_VRAM_Cleaner",
+  "inputs": {
+   "提示音_播放开关": true,
+   "提示音_文件": "二采.mp3",
+   "提示音_音量": 1,
+   "显存_卸载模型": true,
+   "显存_清理缓存": true,
+   "内存_清理文件缓存": true,
+   "内存_清理进程内存": true,
+   "内存_清理DLL": true,
+   "重试次数": 4,
+   "模型_彻底丢弃": false,
+   "信号触发入口": [
+    "304",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "BanZhang_VRAM_Cleaner"
+  }
+ },
+ "304": {
+  "class_type": "banzhangVideoCombine",
+  "inputs": {
+   "⏱️ 帧率": 24,
+   "📼 视频格式": "MP4 (H264/通用)",
+   "🏷️ 文件前缀": "二采",
+   "💾 保存元数据": true,
+   "🔀 输出模式": "自动",
+   "📂 自定义保存路径": "",
+   "🖼️ 图像": [
+    "285",
+    0
+   ],
+   "🎵 音频": [
+    "286",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "banzhangVideoCombine"
+  }
+ },
+ "306": {
+  "class_type": "BanZhang_RTX_SuperResolution",
+  "inputs": {
+   "缩放方式": "按倍数放大",
+   "放大倍数": 2,
+   "输出宽度": 1920,
+   "输出高度": 1080,
+   "处理档位": "常规放大·极致",
+   "强度": 1,
+   "像素精度": "10位(更精细)",
+   "序列源帧率": 24,
+   "保留原音": "开",
+   "视频": [
+    "261",
+    7
+   ]
+  },
+  "_meta": {
+   "title": "BanZhang_RTX_SuperResolution"
+  }
+ },
+ "307": {
+  "class_type": "BanZhang_RIFE_Interpolation",
+  "inputs": {
+   "插帧倍数": 2,
+   "计算精度": "半精度(快,推荐)",
+   "保留原音": "开",
+   "插帧引擎": "RIFE｜快·省显存（默认）",
+   "RIFE模型版本": "v4.26｜最新·画质最佳（推荐）",
+   "序列源帧率": 24,
+   "视频": [
+    "306",
+    1
+   ]
+  },
+  "_meta": {
+   "title": "BanZhang_RIFE_Interpolation"
+  }
+ },
+ "308": {
+  "class_type": "banzhangVideoCombine",
+  "inputs": {
+   "⏱️ 帧率": 24,
+   "📼 视频格式": "MP4 (H264/通用)",
+   "🏷️ 文件前缀": "班长作品",
+   "💾 保存元数据": true,
+   "🔀 输出模式": "自动",
+   "📂 自定义保存路径": "",
+   "🎬 视频文件": [
+    "307",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "banzhangVideoCombine"
+  }
+ },
+ "313": {
+  "class_type": "MiniMaxH3MotionContextSaveLatent",
+  "inputs": {
+   "latent": [
+    "277",
+    0
+   ],
+   "顺序锚": [
+    "261",
+    3
+   ]
+  },
+  "_meta": {
+   "title": "MiniMaxH3MotionContextSaveLatent"
+  }
+ },
+ "323": {
+  "class_type": "H3_LatestFilmPath",
+  "inputs": {
+   "文件名前缀": "班长作品_N308",
+   "秒数窗口": 600,
+   "触发": [
+    "308",
+    1
+   ]
+  },
+  "_meta": {
+   "title": "🎬 成片收片器（链路最后一个视频）"
+  }
+ },
+ "324": {
+  "class_type": "BanzhangProducerClipAdopt",
+  "inputs": {
+   "成片": [
+    "323",
+    0
+   ]
+  },
+  "_meta": {
+   "title": "📦 段尾归位（自动进导演台）"
+  }
+ }
+}

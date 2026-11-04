@@ -145,6 +145,10 @@ def _sem_python():
     cfg = os.path.join(GOLDEN, "sem_python.txt")
     if os.path.isfile(cfg):
         cands.append(open(cfg, encoding="utf-8").read().strip())
+    if os.environ.get("COMFYUI_PYTHON"):
+        cands.append(os.environ["COMFYUI_PYTHON"])
+    comfy_root = os.environ.get("COMFYUI_PATH", r"C:/AI/ComfyUI" if os.name == "nt" else os.path.expanduser("~/ComfyUI"))
+    cands += _g.glob(os.path.join(comfy_root, ".venv", "Scripts", "python.exe"))
     cands += _g.glob(r"D:/Comfy-Desktop/ComfyUI-Installs/*/ComfyUI/.venv/Scripts/python.exe")
     for c in cands:
         if c and os.path.isfile(c):

@@ -1,0 +1,50 @@
+{
+ "n_beats": 3,
+ "tone": {
+  "expect": "cold"
+ },
+ "light": {
+  "hue": "blue",
+  "appear_by_beat": 1,
+  "hold": true,
+  "min_end_frac": 0.004
+ },
+ "motion": {
+  "peak_beats": [
+   1
+  ]
+ },
+ "ending": {
+  "light": "blue",
+  "motion": "still",
+  "min_end_frac": 0.004
+ },
+ "collage": {},
+ "clip": {
+  "must": [
+   {
+    "text": "a giant robot foot stomping the ground making cracks",
+    "beats": [
+     0
+    ]
+   },
+   {
+    "text": "cracked ground with dust",
+    "beats": [
+     1
+    ]
+   },
+   {
+    "text": "a giant rusty mech standing with glowing blue lens band on its head",
+    "beats": [
+     2
+    ]
+   }
+  ],
+  "neg": [
+   "a real human person walking",
+   "a collage of multiple views of one object on a grid"
+  ],
+  "weight": 3
+ }
+}

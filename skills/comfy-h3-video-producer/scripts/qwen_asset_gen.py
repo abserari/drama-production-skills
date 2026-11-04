@@ -207,7 +207,7 @@ def main():
     sys.exit(1 if fail else 0)
 
 
-API_OUTPUT = "D:/Comfy-Desktop/ComfyUI-Shared/output"
+API_OUTPUT = os.environ.get("H3_OUTPUT_DIR", r"C:/AI/ComfyUI/output" if os.name == "nt" else os.path.expanduser("~/ComfyUI/output"))
 
 if __name__ == "__main__":
     main()

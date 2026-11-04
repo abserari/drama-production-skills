@@ -1,0 +1,19 @@
+{
+  "schema_version": "drama.progress.v1",
+  "stages": {
+    "writing": {
+      "status": "pending",
+      "attempts": 0,
+      "external_job_id": null,
+      "checks": [],
+      "next_action": "read brief.md"
+    },
+    "review": {
+      "status": "pending",
+      "attempts": 0,
+      "checks": [],
+      "next_action": "wait for writing"
+    }
+  },
+  "segs": {}
+}

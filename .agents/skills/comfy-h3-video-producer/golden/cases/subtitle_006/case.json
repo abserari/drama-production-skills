@@ -1,0 +1,12 @@
+{
+ "check": "subtitle",
+ "expect": "PASS",
+ "was": "WARN",
+ "why": "seg06底部条带文字状像素为纸面生日快乐蜡笔字，非烧入字幕，人工放行",
+ "tolerant": true,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-11-02-13-05-59\\最后投递\\生产\\checks\\seg06_20261102_143243",
+ "video": "成片/seg06.mp4",
+ "created": "2026-11-02 14:34:46",
+ "id": "subtitle_006",
+ "inputs": {}
+}

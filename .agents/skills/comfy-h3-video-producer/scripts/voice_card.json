@@ -1,0 +1,23 @@
+{
+ "_note": "声线卡注册表。prompt_text 逐字写进提示词的 <Audio N> 段；改一个字都会破坏跨段声线一致性。qa 段只给自检脚本用，不进提示词。max_bed_db=持续床音上限；min_tail_silence=段尾留白，防拟音被拼接切断。动作拟音不作上限（由 --fx 控制是否要求存在）。\n⚠️ 这是通用模板。新项目必须替换为本项目的角色声线（见 examples/deng/voice_card.json 参考）。每个角色的 key（S1/S2/S3…）对应提示词中 <Audio N> 的编号。",
+ "S1": {
+  "role": "角色名（示例）",
+  "prompt_text": "为 <Subject 1> 角色名 (S1) 的声线锚定：<年龄><性别> 音色，<音域描述>，<发声方式>；语速<描述>，咬字<描述>；<语言>，<禁用发声特征>。",
+  "qa": {
+   "target_f0": 200,
+   "f0_tol": 40,
+   "max_bed_db": -50,
+   "min_tail_silence": 0.35
+  }
+ },
+ "S2": {
+  "role": "（可选，按需增删 S2/S3/…）",
+  "prompt_text": "（同上格式）",
+  "qa": {
+   "target_f0": 200,
+   "f0_tol": 40,
+   "max_bed_db": -50,
+   "min_tail_silence": 0.35
+  }
+ }
+}

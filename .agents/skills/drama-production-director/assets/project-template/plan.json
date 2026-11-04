@@ -1,0 +1,39 @@
+{
+  "schema_version": "drama.plan.v1",
+  "stages": [
+    {
+      "id": "writing",
+      "skill": "short-drama-writing",
+      "depends_on": [],
+      "inputs": [
+        "brief.md"
+      ],
+      "outputs": [
+        "artifacts/script.md"
+      ],
+      "required": true,
+      "acceptance": [
+        "目标剧情和人物动机可辨",
+        "无未处理的关键歧义"
+      ]
+    },
+    {
+      "id": "review",
+      "skill": "drama-production-review",
+      "depends_on": [
+        "writing"
+      ],
+      "inputs": [
+        "artifacts/script.md"
+      ],
+      "outputs": [
+        "checks/script-review.json"
+      ],
+      "required": true,
+      "acceptance": [
+        "当前文本版本的内容审查通过"
+      ]
+    }
+  ],
+  "segs": []
+}

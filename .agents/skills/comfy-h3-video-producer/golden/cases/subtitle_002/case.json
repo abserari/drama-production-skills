@@ -1,0 +1,12 @@
+{
+ "check": "subtitle",
+ "expect": "PASS",
+ "was": "WARN",
+ "why": "仪表盘暗部纹理触发恒定文字区交集 WARN，人工确认无水印。同 subtitle_001 的灵敏度容忍",
+ "tolerant": true,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-10-31-00-01-47\\锈海拾荒\\生产\\checks\\seg14_20261101_041859",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0224.mp4",
+ "created": "2026-11-01 11:14:36",
+ "id": "subtitle_002",
+ "inputs": {}
+}

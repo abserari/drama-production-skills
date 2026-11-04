@@ -1,0 +1,12 @@
+{
+ "check": "subtitle",
+ "expect": "PASS",
+ "was": "PASS",
+ "why": "好样本：干净画面字幕/水印检测应静默（当时零 WARN）",
+ "tolerant": false,
+ "source": "C:\\Users\\windows\\WorkBuddy\\2026-10-31-00-01-47\\锈海拾荒\\生产\\checks\\seg10_20261101_034404",
+ "video": "D:/Comfy-Desktop/ComfyUI-Shared/output\\一采_N280_0218.mp4",
+ "created": "2026-11-01 11:14:42",
+ "id": "subtitle_004",
+ "inputs": {}
+}
