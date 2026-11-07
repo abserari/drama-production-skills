@@ -10,6 +10,7 @@ description: 执行短剧导演分镜工序；由总协调按项目路径调用�
 ## SOP 与工具
 用户要求依据实际原作临摹/重写时，先按 [原作证据驱动改编](references/source-led-adaptation.md) 建立事件与对白意图账本，再改写分镜；不沿用无原作依据的强冲突套路。
 按需读取 [技术参考](references/legacy-techniques.md)，主要由 agent 编排 plan.json 的镜头、动作、角色、台词与依赖。`scripts/director_engine.py` 是旧风格配方的 Python 函数库（不是 --validate 命令）；仅在选中该配方时导入 compile_director_prompt，或复用 normalize_chinese_dialogue。不要用字数规则自动扩写用户台词。参考中的旧固定八镜、统一时长、强制运镜轮换、凝视、性能及改善比例均为历史配方或未复核描述，不是本项目通用要求。只采用与实际能力相符的部分。
+当对话镜头重复或用户希望调度多样化时，按 [动机驱动的人物与镜头调度](references/motivated-blocking.md) 设计站位、视线、景别与前后景。优先改变人物关系和空间，不用连续慢推或机械轮换运镜替代。
 ## 输出与保存
 按 plan 约定输出到项目目录，返回路径、实际参数、输入与产物哈希及工具结果；不要将运行状态写进技能目录。
 ## 完成证据

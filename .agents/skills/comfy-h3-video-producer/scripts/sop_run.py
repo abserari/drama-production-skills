@@ -588,10 +588,13 @@ def _new_files(baseline, prefixes, since):
 
 
 def _queue_pids():
+    """返回 (running_pids, pending_pids)；ComfyUI 不可达时返回 None（可辨识，
+    供 watch 的健康检测区分「队列空」和「失联」——以前失联被当成队列空，
+    监工会干等满 timeout。"""
     try:
         q = paths.http_json("/queue", timeout=15)
     except Exception:
-        return set(), set()
+        return None
     run = {it[1] for it in q.get("queue_running", []) if len(it) > 1}
     pen = {it[1] for it in q.get("queue_pending", []) if len(it) > 1}
     return run, pen
@@ -614,7 +617,7 @@ def cmd_watch(a):
     print(f"[watch] {a.seg} prompt_id={pid} seed={s.get('seed')} "
           f"基线 {len(baseline)} 个文件 · 找「{take1p or '全部前缀'}」的新文件", flush=True)
     t0 = time.time()
-    stable, last = 0, None
+    stable, last, down = 0, None, 0
     cand = None
     while time.time() - t0 < a.timeout:
         news = _new_files(baseline, prefixes, since)
@@ -629,34 +632,50 @@ def cmd_watch(a):
                 break
             print(f"  ... {os.path.basename(p)} 落盘中 {sz/1048576:.1f} MB", flush=True)
         else:
-            run, pen = _queue_pids()
-            if pid and pid not in run and pid not in pen:
-                # 不在队列里也没新文件 → 要么很早前就完了，要么报错了
-                try:
-                    hist = paths.http_json(f"/history/{pid}", timeout=15).get(pid) or {}
-                except Exception:
-                    hist = {}
-                stt = (hist.get("status") or {}).get("status_str")
-                if stt in ("error", "failed"):
-                    s["status"] = "失败待复核"
-                    s["fail_reason"] = [f"ComfyUI 执行报错: {json.dumps(hist.get('status'), ensure_ascii=False)[:400]}"]
-                    save(d)
-                    print(json.dumps({"verdict": "ERROR", "seg": a.seg,
-                                      "status": hist.get("status")}, ensure_ascii=False, indent=1))
-                    sys.exit(3)
-                if stt == "success":
-                    # 成功但没发现新文件：可能前缀对不上，用 history 的 outputs 兜底
-                    outs = [it.get("filename") for nd in (hist.get("outputs") or {}).values()
-                            for v in nd.values() if isinstance(v, list)
-                            for it in v if isinstance(it, dict)]
-                    print(f"[WARN] 任务已完成但没发现新文件，history 产出: {outs}")
-                    if outs:
-                        pick = [f for f in outs if take1p and str(f).startswith(take1p)] or outs
-                        cand = os.path.join(paths.OUTPUT_DIR, pick[0])
-                        break
-                    s["status"] = "失败待复核"
-                    save(d)
-                    sys.exit(3)
+            q = _queue_pids()
+            if q is None:
+                # v3.6 健康检测：以前失联被当成"队列空"干等满 timeout（最长 1 小时）。
+                # 连续 ~30 秒（6×poll5s）都够不着 ComfyUI → 立即报 COMFYUI_DOWN。
+                down += 1
+                if down >= 6:
+                    # 不改 status：失联≠任务死了，可能 ComfyUI 卡死/暂时无响应，
+                    # 旧任务也许还在跑。保持「生成中」，恢复后 auto/watch 重跑
+                    # 会直接续等；真崩了则 TIMEOUT（队列空）→ 转人工，不误重抽。
+                    print(json.dumps({"verdict": "COMFYUI_DOWN", "seg": a.seg},
+                                     ensure_ascii=False))
+                    print("[watch] ComfyUI 连续六次探测不可达 → 中止监工（人工确认 ComfyUI 状态，"
+                          "恢复后重跑 watch 或 auto 即可续上，台账未丢）")
+                    sys.exit(4)
+            else:
+                down = 0
+                run, pen = q
+                if pid and pid not in run and pid not in pen:
+                    # 不在队列里也没新文件 → 要么很早前就完了，要么报错了
+                    try:
+                        hist = paths.http_json(f"/history/{pid}", timeout=15).get(pid) or {}
+                    except Exception:
+                        hist = {}
+                    stt = (hist.get("status") or {}).get("status_str")
+                    if stt in ("error", "failed"):
+                        s["status"] = "失败待复核"
+                        s["fail_reason"] = [f"ComfyUI 执行报错: {json.dumps(hist.get('status'), ensure_ascii=False)[:400]}"]
+                        save(d)
+                        print(json.dumps({"verdict": "ERROR", "seg": a.seg,
+                                          "status": hist.get("status")}, ensure_ascii=False, indent=1))
+                        sys.exit(3)
+                    if stt == "success":
+                        # 成功但没发现新文件：可能前缀对不上，用 history 的 outputs 兜底
+                        outs = [it.get("filename") for nd in (hist.get("outputs") or {}).values()
+                                for v in nd.values() if isinstance(v, list)
+                                for it in v if isinstance(it, dict)]
+                        print(f"[WARN] 任务已完成但没发现新文件，history 产出: {outs}")
+                        if outs:
+                            pick = [f for f in outs if take1p and str(f).startswith(take1p)] or outs
+                            cand = os.path.join(paths.OUTPUT_DIR, pick[0])
+                            break
+                        s["status"] = "失败待复核"
+                        save(d)
+                        sys.exit(3)
         time.sleep(a.poll)
     if not cand:
         print(json.dumps({"verdict": "TIMEOUT", "seg": a.seg, "waited_s": int(time.time() - t0)},

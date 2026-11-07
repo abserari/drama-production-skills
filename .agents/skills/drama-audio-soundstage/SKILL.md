@@ -24,3 +24,6 @@ description: 执行短剧声音处理工序；由总协调按项目路径调用�
 - H3 路径的 check_audio_seg.py 只做能量/时序启发式检查，其 PASS 不证明台词正确。
 - 需要逐字检查时使用兄弟 comfy-h3-video-producer/scripts/check_dialogue_asr.py；配置 H3_ASR_PY 和 H3_WHISPER_MODEL 指向已有环境及本地权重，缺少时标记待审，不自动下载模型。
 - ASR 的语言提示不是独立语种置信检测。口型、口音、声音身份仍需实际收听/看片或具备该能力的评审者。
+
+## 对白表演
+出现句前笑、额外哼声、拖长或错误说话人时，按 [自然对白审查与修复](references/dialogue-performance.md) 执行。实际听审先于扩量；ASR 和能量闸门不替代这一环节。

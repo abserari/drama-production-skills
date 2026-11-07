@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""提示词 v2.1 静态 preflight：把 references/prompt_standard_v2.md 第六节的检查项变成可执行判定。
+"""提示词 v2.5 静态 preflight（物理动量惯性延续与双轨多任务增强版）：把 references/prompt_standard_v2.md 第六节的检查项变成可执行判定。
 
 提交前跑一遍，避免「情绪词没清、音效没点名、声线卡改了一个字、台词排到末拍」这类
 纯文本层面就能发现的错误浪费一次 40 分钟的生成。
@@ -29,7 +29,7 @@ EMO = ["茫然", "疑惑", "困惑", "平静", "悲伤", "紧张", "犹豫", "�
        "焦虑", "忧愁", "喜出望外", "如释重负", "若有所思", "依依不舍", "极轻地", "轻轻地",
        "默默地", "狠狠地", "缓缓地", "慢慢地"]
 # 出现在否定/禁止语境里是合法的（防错约束、禁止清单）
-NEG_CTX = ("不得", "禁止", "无", "不写", "不许", "不要", "零容忍")
+NEG_CTX = ("不得", "禁止", "不写", "不许", "不要", "零容忍", "无悲伤", "无情绪")
 
 REQUIRED_SECTIONS = ["subject_definitions:", "summary:", "detailed_description:",
                      "overall_soundscape:", "non_diegetic_music:", "防错约束："]
@@ -76,13 +76,16 @@ class Report:
 
 
 def strip_neg_sentences(text):
-    """去掉否定/禁止语境的句子，避免防错约束里的「不得表现悲伤」被误报。"""
+    """去掉否定/禁止语境的句子，避免防错约束里的「不得表现悲伤」被误报。
+    注：按标点子句切分，避免整拍长行因含「无发声」导致整拍动作被误删漏检。"""
+    if "防错约束：" in text:
+        text = text.split("防错约束：")[0]
     out = []
-    for line in text.splitlines():
-        if any(k in line for k in NEG_CTX):
+    for sentence in re.split(r"[\u3002\n]", text):
+        if any(k in sentence for k in NEG_CTX):
             continue
-        out.append(line)
-    return "\n".join(out)
+        out.append(sentence)
+    return "\u3002".join(out)
 
 
 def check(name, prompt, length=243):
@@ -166,7 +169,7 @@ def check(name, prompt, length=243):
     body = strip_neg_sentences(prompt)
     hits = [w for w in EMO if w in body]
     if hits:
-        r.fail(f"情绪词未清零: {hits}（改成可见肌肉动作）")
+        r.fail(f"情绪词未清零: {hits}（查 references/emotion_performance.md 对应条目，改成可见肌肉动作）")
     else:
         r.ok("情绪词清零")
 
@@ -292,6 +295,54 @@ def check(name, prompt, length=243):
         if ending and not any(k in ending for k in ("完成态", "必须", "不允许")):
             r.warn("[结尾状态] 建议写状态型死条款（「结尾必须是…完成态，不允许停在…」）"
                    "——状态型比过程描述管用")
+
+    # 13. 五维空间矢量与朝向解耦（v2.3 核心新增：根除售货机背反与直视穿帮）
+    # 13.1 孤立朝向检测：裸写「背对镜头/面对镜头」而没有交互目标坐标
+    isolated_orient = []
+    for m in re.finditer(r"(背对镜头|背向镜头|背对机位|面对镜头|正对镜头|面朝镜头)", body_nn):
+        # 截取前后 30 字看是否有交互目标或方位角
+        start = max(0, m.start() - 30)
+        end = min(len(body_nn), m.end() + 30)
+        ctx = body_nn[start:end]
+        if not re.search(r"朝向|夹角|度|°|正对|对准|视锥|目标|操作|面板|迎向", ctx):
+            isolated_orient.append(m.group(1))
+    if isolated_orient:
+        r.warn(f"发现模糊朝向词 {set(isolated_orient)} 缺少交互目标与视锥解耦——"
+               "实测容易导致角色背对交互物（如售货机街道事故），建议改写为「正面躯干朝向[目标]，后背呈N度迎向机位视锥」")
+
+    # 13.2 转向动力学闭环：出现转身/转向时检查是否有轴心或度数
+    turns = re.findall(r"(?:转过身|转身|回身|转头|转向)", body_nn)
+    if turns:
+        has_deg = re.search(r"\d+\s*(?:度|°)|顺时针|逆时针|轴心|偏转", body_nn)
+        if not has_deg:
+            r.warn("正文包含转向动作（" + "、".join(set(turns)) + "），但未指明旋转度数或轴心（如『以脚底为轴心逆时针转80度』）——缺少动力学易导致瞬移或整体旋转")
+
+    # 13.3 视线/传感器锁定检查（Anti-Lens Gaze Locking）
+    if not re.search(r"视线|目光|光学视轴|主传感器|主眼|焦点|瞳孔|不直视|盲区", body_nn):
+        r.warn("正文未显式指定视线或光学传感器落点——模型默认有正面注视机位偏好，建议写明「视线钉死在[目标]，严禁直视镜头」")
+
+    # 14. 电影级镜头语言与视听高阶技法建议（v2.4 新增）
+    # 14.1 双人交互与正反打建议
+    if n_subj >= 2 and d_cnt >= 1:
+        if not re.search(r"过肩|越肩|OTS|正反打|反打|对峙|轴线|同侧", prompt, re.I):
+            r.warn("双主体交互/对话段落：建议考虑引入正反打越肩（OTS）机位以强化空间深度与视线咬合")
+
+    # 14.2 台词口型发音预备与收束检查
+    if d_cnt >= 1:
+        if not re.search(r"预备|唇|微张|下颌|开合|发音|收束|闭合", prompt):
+            r.warn("包含台词但未描述自然起声与收束——按需补充直接起声、句尾自然闭合，不机械添加笑声/吸气/预备停顿")
+
+    # 14.3 光学焦段与景深参数建议
+    if not re.search(r"\d+mm|广角|长焦|浅景深|深焦|散景|Bokeh|DOF|光圈", prompt, re.I):
+        r.warn("镜头行未包含物理光学参数（焦段如24/50/85mm、浅景深/深焦）——建议量化光学参数以消除CG贴图感")
+
+    # 14.4 物理动量延续与跨台词双轨多任务演出检查（v2.5 新增：根除说话即立正木偶感）
+    if d_cnt >= 1:
+        has_momentum = re.search(r"步伐未停|行进.*(?:未停|持续|延续)|作业.*(?:未停|持续)|手头.*(?:未停|动作)|边.*边|惯性|动量|重心.*平移|双手.*动作.*不|迈步.*未停|行进中发声|双足交替", prompt)
+        has_explicit_stop = re.search(r"停下|站定|驻足|停步|刹停", prompt)
+        if not has_momentum and not has_explicit_stop:
+            r.warn("台词节拍未说明静止或动作状态（可选建议）；已有行进/作业时保持连续，自然站立也合法，不要求每句走动")
+
     return r
 
 

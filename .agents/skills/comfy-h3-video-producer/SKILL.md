@@ -17,3 +17,7 @@ description: 执行本地 H3 视频制作路径，完成工作流握手、分镜
 暂态最多重试两次、质量最多返工两轮。结果未知不得重投，关键模块异常必须修复。总协调者是台账唯一写入者。
 ## 参考与约束
 旧工具细节按需查 references/legacy-production-manual.md；该文是历史机制参考，其旧路径、固定时长、强制凝视、速度及效果数字均不是当前通用要求。语速、运镜、段尾动作由项目决定。当前安装只支持真实存在的节点；切换工具另选技能，不伪造兼容性。
+
+## 同事更新与表演修正
+本次资料按 [合并说明](references/merge-notes-20261107.md) 使用。排镜读取 [导演资料](references/directing/README.md) / [摄影资料](references/cinematography/README.md)，需要情绪重场时查 [表演菜单](references/emotion_performance.md)。详尽旧入口只存档在 [同事手册](references/colleague-production-manual-20261106.md)，不恢复全工序巨型入口。
+对白读声音技能的 dialogue-performance；动作/打斗交给 drama-action-production，H3 只是候选渲染器。工具提示的运动/光学建议是可选 WARN，不是每镜必备。
